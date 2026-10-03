@@ -1,0 +1,2172 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IDECO AI Voice Studio</title>
+<style>
+:root{
+  --bg:#f4f7fb;--card:#fff;--ink:#132238;--muted:#6c7a90;--line:#dce5f0;
+  --blue:#2563eb;--blue2:#1d4ed8;--green:#0b8f67;--red:#c83e3e;--amber:#946200;
+  --shadow:0 16px 42px rgba(20,40,75,.10)
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:linear-gradient(180deg,#eaf3ff 0,#f7f9fc 290px,#f4f7fb 100%)}
+.wrap{max-width:1200px;margin:auto}
+header{padding:24px 18px 12px}
+.brand{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+h1{font-size:clamp(27px,4vw,40px);margin:5px 0 3px;letter-spacing:-.03em}
+.sub{color:var(--muted);margin:0}
+.badge{display:inline-block;background:#e8f1ff;color:#2457ad;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:850}
+.gear,.btn{border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;cursor:pointer}
+.gear{background:#fff;border:1px solid var(--line);box-shadow:0 5px 18px rgba(0,0,0,.05);white-space:nowrap}
+main{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;padding:10px 18px 34px}
+@media(max-width:920px){main{grid-template-columns:1fr}.brand{align-items:flex-start}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+.card h2{font-size:17px;margin:0 0 13px}
+label,.label{display:block;margin:12px 0 7px;font-size:13px;font-weight:850}
+textarea,input,select{width:100%;border:1px solid #cbd7e6;border-radius:12px;padding:12px 13px;background:#fff;font:inherit;color:var(--ink);outline:none}
+textarea:focus,input:focus,select:focus{border-color:#6d9bf5;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+textarea{min-height:280px;resize:vertical;line-height:1.55}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:620px){.row,.row3{grid-template-columns:1fr}}
+.toolbar,.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue2)}
+.btn-soft{background:#edf3ff;color:#1c4eaa}
+.btn-good{background:#e6f9f1;color:#087252}
+.btn-danger{background:#fff0f0;color:#ae3030}
+.btn:disabled{opacity:.52;cursor:not-allowed}
+.pill{border:1px solid #d5e2f3;background:#f8fbff;border-radius:999px;padding:8px 11px;font-size:13px;font-weight:750;color:#315477;cursor:pointer}
+.pill.active{background:#e4edff;border-color:#7098ed;color:#1747a0}
+.status{margin-top:12px;padding:10px 12px;border-radius:12px;background:#f4f7fb;color:#526277;font-size:13px;white-space:pre-wrap}
+.status.ok{background:#eaf9f3;color:#087252}.status.err{background:#fff0f0;color:#ad3232}.status.busy{background:#fff7e3;color:#805900}
+.count{text-align:right;color:var(--muted);font-size:11px;margin-top:5px}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+.audioBox{border:1px dashed #b9cae4;border-radius:16px;background:#fbfdff;padding:14px}
+.wave{height:78px;display:flex;align-items:center;justify-content:center;gap:4px;background:linear-gradient(#f4f8ff,#fff);border-radius:12px;overflow:hidden}
+.wave span{width:5px;height:15px;border-radius:6px;background:#4f7ee8;animation:pulse 1.05s ease-in-out infinite;animation-play-state:paused}
+.wave.playing span{animation-play-state:running}.wave span:nth-child(3n){animation-delay:.16s}.wave span:nth-child(4n){animation-delay:.32s}.wave span:nth-child(5n){animation-delay:.48s}
+@keyframes pulse{0%,100%{height:13px;opacity:.4}50%{height:57px;opacity:1}}
+audio{width:100%;margin-top:10px}
+.note{background:#fff9e9;border-left:4px solid #e2a624;color:#76580a;border-radius:9px;padding:10px 12px;font-size:12px;margin-top:12px}
+.modal{display:none;position:fixed;inset:0;background:rgba(10,20,37,.55);z-index:20;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modalCard{width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;padding:18px;box-shadow:0 28px 85px rgba(0,0,0,.28)}
+.modalHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.close{border:0;width:36px;height:36px;border-radius:10px;background:#edf1f6;font-size:18px;cursor:pointer}
+.keyrow{display:grid;grid-template-columns:1fr auto;gap:8px}
+.small{font-size:12px;color:var(--muted)}
+.inline{display:flex;gap:8px;align-items:center}
+.hidden{display:none!important}
+
+.subcard{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:14px;background:#fbfdff}
+.subcard h3{margin:0 0 8px;font-size:15px}
+.textarea-sm{min-height:96px!important}
+.voice-id{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
+.voiceHint{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.45}
+details.advanced{margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff}
+details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
+.consent{background:#f6f9ff;border:1px solid #dce8fb;border-radius:10px;padding:9px 11px;font-size:12px;line-height:1.5}
+.tagline{font-size:11px;color:#526277;margin-top:6px}
+
+/* ===== HUYỀN AI BÁO CÁO KINH DOANH ===== */
+.report-card{grid-column:1/-1}
+.report-hero{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.report-hero h2{font-size:21px;margin:0 0 6px}.report-hero p{margin:0;color:var(--muted);max-width:820px;line-height:1.55}
+.report-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.report-grid.two{grid-template-columns:1fr 1fr}
+@media(max-width:850px){.report-grid,.report-grid.two{grid-template-columns:1fr}}
+.report-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0 9px}
+.report-tab{border:1px solid #d5e2f3;background:#f8fbff;color:#315477;border-radius:10px;padding:9px 11px;font-weight:800;cursor:pointer}
+.report-tab.active{background:#e4edff;border-color:#7098ed;color:#1747a0}
+.report-panel{display:none}.report-panel.active{display:block}
+.report-output{min-height:245px!important;background:#fbfdff;font-size:14px;line-height:1.58}
+.report-kpi-note{background:#eef7ff;border:1px solid #cfe3fb;border-radius:13px;padding:11px 13px;margin-top:12px;font-size:12px;color:#315477;line-height:1.55}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.report-audio{margin-top:14px;border:1px solid #dbe6f4;border-radius:16px;padding:14px;background:#fbfdff}
+.report-badge{display:inline-flex;align-items:center;gap:6px;background:#eef6ff;border:1px solid #d3e7ff;color:#205a9b;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:850}
+
+.report-engine{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:9px}
+.engine-pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800;background:#f3f7ff;border:1px solid #d7e4f5;color:#315477}
+.audio-parts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:850px){.audio-parts{grid-template-columns:1fr}}
+.audio-part{border:1px solid #dbe6f4;border-radius:15px;padding:13px;background:#fff}
+.audio-part h3{margin:0 0 4px;font-size:15px}.audio-part p{margin:0 0 8px;color:var(--muted);font-size:12px;line-height:1.45}
+.merged-box{margin-top:12px;border:2px solid #cfe0ff;border-radius:16px;padding:14px;background:#f7faff}
+.merged-box h3{margin:0 0 5px}.department-note{background:#fff7e8;border:1px solid #f1ddb0;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:12px;color:#76580a;line-height:1.5}
+.kie-note{background:#f0fdf8;border:1px solid #c7ebdd;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:12px;color:#126046;line-height:1.5}
+
+
+/* ===== 2 LUỒNG VĂN BẢN: THÔNG BÁO THƯỜNG / BÁO CÁO ===== */
+.engine-inline{margin:-2px 0 10px;padding:9px 11px;border-radius:11px;background:#eef6ff;border:1px solid #d3e7ff;color:#315477;font-size:12px;line-height:1.45}
+.report-source-box{margin-top:14px;border:2px solid #d9e7ff;border-radius:17px;padding:15px;background:linear-gradient(180deg,#f8fbff,#fff)}
+.report-source-box h3,.normalize-box h3{margin:0 0 5px;font-size:16px}
+.report-source-box textarea{min-height:260px}
+.normalize-box{margin-top:14px;border:1px solid #cfe4dc;border-radius:17px;padding:15px;background:#f7fffb}
+.normalize-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+@media(max-width:850px){.normalize-columns{grid-template-columns:1fr}}
+.normalize-columns textarea{min-height:260px;font-size:14px}
+.normalize-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:8px}
+.normalize-meta>div{min-width:210px;flex:1}
+.context-field-tools{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
+.context-field-tools .btn{padding:8px 10px;font-size:12px;border-radius:10px}
+.context-field-status{margin-top:7px;padding:7px 9px;border-radius:10px;background:#f4f7fb;color:#5a6b80;font-size:11px;line-height:1.4;white-space:pre-wrap}
+.context-field-status.busy{background:#fff7e3;color:#805900}.context-field-status.ok{background:#eaf9f3;color:#087252}.context-field-status.err{background:#fff0f0;color:#ad3232}
+.savings{display:inline-flex;align-items:center;min-height:40px;padding:8px 11px;border-radius:10px;background:#eaf9f3;color:#087252;font-size:12px;font-weight:800}
+.flow-arrow{margin:10px 0;text-align:center;font-weight:900;color:#2a5eb9;font-size:13px}
+
+.panel-audio-tools{margin-top:9px;padding:10px 11px;border:1px dashed #c7d8ee;border-radius:12px;background:#fff}
+.panel-audio-tools .toolbar{margin-top:0}
+.panel-audio-tools audio{margin-top:8px}
+.company-knowledge{margin-top:12px;border:1px solid #d7e4f5;border-radius:15px;padding:13px;background:#f8fbff}
+.company-knowledge textarea{min-height:120px}
+.company-list{display:grid;gap:8px;margin-top:10px}
+.company-item{border:1px solid #dbe6f4;border-radius:12px;padding:10px 11px;background:#fff}
+.company-item-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.company-item-title{font-weight:850;color:#234f84}
+.company-item-content{white-space:pre-wrap;color:#526277;font-size:12px;line-height:1.5;margin-top:5px;max-height:130px;overflow:auto}
+.company-empty{font-size:12px;color:var(--muted);padding:8px 0}
+.huyen-region-note{background:#eefaf5;border:1px solid #cfe9de;border-radius:12px;padding:10px 12px;color:#176448;font-size:12px;line-height:1.5}
+
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap brand">
+    <div>
+      <span class="badge">IDECO AI VOICE • GIỌNG TỰ NHIÊN • PHÂN TÍCH BÁO CÁO</span>
+      <h1>IDECO AI Voice Studio</h1>
+      <p class="sub">Giọng đọc thông báo • Chuẩn hóa báo cáo dài • Huyền phân tích theo góc nhìn BGĐ</p>
+    </div>
+    <button class="gear" id="openSettings">⚙️ Cài đặt</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <h2>1. Nội dung thông báo thường — IDECO Giọng đọc</h2>
+    <div class="engine-inline">🔊 <b>Chỉ dùng cho thông báo/văn bản thường</b> • IDECO Giọng đọc tự nhiên</div>
+    <textarea id="text" placeholder="Dán thông báo hoặc văn bản thường tại đây. Khung này KHÔNG dùng cho báo cáo dài..."></textarea>
+    <div class="count"><span id="charCount">0</span> ký tự</div>
+    <div class="toolbar">
+      <button class="btn btn-good" id="micBtn">🎙️ Ghi âm → Văn bản</button>
+      <button class="btn btn-soft" id="stopMicBtn" disabled>⏹ Dừng & chép lời</button>
+      <button class="btn btn-soft" id="uploadAudioBtn">📁 Chọn file ghi âm</button>
+      <input id="audioFileInput" type="file" accept="audio/*" class="hidden">
+      <button class="btn btn-danger" id="clearBtn">Xóa</button>
+    </div>
+    <div id="micStatus" class="status">Trên mobile, ứng dụng ưu tiên ghi âm bằng micro rồi dùng IDECO AI để chép lời. Micro trình duyệt cần quyền truy cập và thường cần HTTPS.</div>
+
+    <hr>
+    <h2>2. AI soạn lại thông báo thường trước khi đọc</h2>
+    <div class="label">Phong cách nội dung</div>
+    <div class="pills" id="rewriteStyles">
+      <button class="pill active" data-style="Tự nhiên">Tự nhiên</button>
+      <button class="pill" data-style="Trao đổi">Trao đổi</button>
+      <button class="pill" data-style="Hài hước">Hài hước</button>
+      <button class="pill" data-style="Hội thảo">Hội thảo</button>
+      <button class="pill" data-style="Đào tạo">Đào tạo</button>
+      <button class="pill" data-style="Podcast">Podcast</button>
+    </div>
+    <label>Yêu cầu thêm cho AI (không bắt buộc)</label>
+    <input id="rewriteExtra" placeholder="Ví dụ: ngắn hơn 20%, giữ nguyên số liệu/tên sản phẩm...">
+    <div class="toolbar">
+      <button class="btn btn-primary" id="rewriteBtn">✨ AI soạn lại</button>
+      <button class="btn btn-soft" id="undoBtn" disabled>↩️ Trở lại bản trước</button>
+    </div>
+    <div id="rewriteStatus" class="status">AI sẽ chỉ sửa nội dung khi bạn bấm “AI soạn lại”. Bạn vẫn có thể chỉnh tay trước khi tạo giọng.</div>
+  </section>
+
+  <section class="card">
+    <h2>3. Thiết lập giọng đọc IDECO</h2>
+    <div class="row">
+      <div>
+        <label>Nhóm giọng</label>
+        <select id="gender">
+          <option value="all">Tất cả giọng</option>
+          <option value="female">Ưu tiên giọng Nữ</option>
+          <option value="male">Ưu tiên giọng Nam</option>
+        </select>
+      </div>
+      <div>
+        <label>Giọng IDECO / Giọng riêng</label>
+        <select id="voice"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Chất giọng vùng miền</label>
+        <select id="region">
+          <option value="standard" selected>Tiếng Việt chuẩn / trung tính</option>
+          <option value="south">Miền Nam</option>
+          <option value="north">Miền Bắc</option>
+          <option value="hanoi">Hà Nội</option>
+          <option value="hue">Huế</option>
+          <option value="quangngai">Quảng Ngãi</option>
+          <option value="binhdinh">Bình Định</option>
+          <option value="phuyen">Phú Yên</option>
+        </select>
+      </div>
+      <div>
+        <label>Chế độ vùng miền</label>
+        <select id="regionMode">
+          <option value="locked" selected>🔒 Khóa đúng vùng miền — khuyên dùng</option>
+          <option value="style">Chỉ hướng dẫn accent — nhanh hơn</option>
+        </select>
+        <div class="small" style="margin-top:6px">Chế độ Khóa sẽ tự tạo Voice Design riêng cho vùng đã chọn ở lần dùng đầu tiên và tái sử dụng về sau.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Phong cách đọc</label>
+        <select id="readStyle">
+          <option value="natural, conversational, clear">Tự nhiên</option>
+          <option value="professional, confident, clear presentation">Hội thảo</option>
+          <option value="teacher-like, structured, clear emphasis on key ideas">Đào tạo</option>
+          <option value="intimate podcast delivery, relaxed and rhythmic">Podcast</option>
+          <option value="lightly humorous, charming, not exaggerated">Hài hước</option>
+          <option value="warm, heartfelt, emotionally nuanced">Truyền cảm</option>
+          <option value="bright, energetic, motivating, articulate">Năng lượng</option>
+          <option value="formal, composed, authoritative">Trang trọng</option>
+          <option value="soft, intimate, gentle storytelling">Kể chuyện nhẹ nhàng</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row3">
+      <div>
+        <label>Tốc độ</label>
+        <select id="pace">
+          <option value="slowly">Chậm</option><option value="at a natural medium pace" selected>Vừa phải</option><option value="briskly but clearly">Nhanh</option>
+        </select>
+      </div>
+      <div>
+        <label>Cảm xúc</label>
+        <select id="emotion">
+          <option value="natural" selected>Tự nhiên</option>
+          <option value="warm and caring">Ấm áp</option>
+          <option value="joyful and excited">Vui vẻ / Hào hứng</option>
+          <option value="calm and reassuring">Điềm tĩnh</option>
+          <option value="trustworthy and sincere">Tin cậy</option>
+          <option value="deeply emotional and touching">Xúc động</option>
+          <option value="reflective and nostalgic">Hoài niệm</option>
+          <option value="serious and focused">Nghiêm túc</option>
+          <option value="gentle and affectionate">Dịu dàng</option>
+          <option value="confident and persuasive">Tự tin / Thuyết phục</option>
+        </select>
+      </div>
+      <div>
+        <label>Mức cảm xúc</label>
+        <select id="emotionLevel">
+          <option value="subtle">Nhẹ</option><option value="moderate" selected>Vừa</option><option value="strong but natural">Rõ</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Độ nhấn</label>
+        <select id="emphasis">
+          <option value="light emphasis">Nhẹ</option><option value="balanced emphasis" selected>Vừa</option><option value="clear emphasis on important words">Rõ</option>
+        </select>
+      </div>
+      <div>
+        <label>Nhịp thở / khoảng nghỉ</label>
+        <select id="pauseStyle">
+          <option value="natural breathing and short pauses" selected>Tự nhiên</option>
+          <option value="slightly longer pauses between ideas">Nghỉ rõ giữa các ý</option>
+          <option value="tight pacing with minimal pauses">Liền mạch</option>
+          <option value="storytelling pauses, gentle breathing">Kể chuyện</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Chỉ dẫn đọc riêng (không bắt buộc)</label>
+    <input id="voiceInstruction" placeholder="Ví dụ: nhấn tên thuốc, đọc giá chậm và rõ, cuối câu hạ giọng tự nhiên...">
+    <div class="voiceHint"><b>Khóa vùng miền:</b> với Huế, Quảng Ngãi, Bình Định, Phú Yên, Hà Nội, Miền Bắc hoặc Miền Nam, ứng dụng có thể tự tạo một <code>voice_...</code> theo đúng vùng và lưu lại để dùng tiếp. Đây là cách ổn định hơn nhiều so với chỉ ghi vùng miền trong <code>speech_metadata.style</code>.</div>
+
+    <div class="subcard">
+      <h3>🎙️ Tạo giọng riêng — Voice Design</h3>
+      <div class="row">
+        <div><label>Tên giọng</label><input id="designName" placeholder="Ví dụ: IDECO Nam Sài Gòn 40"></div>
+        <div><label>Giới tính cảm nhận</label><select id="designGender"><option value="male">Nam</option><option value="female">Nữ</option><option value="neutral">Trung tính</option></select></div>
+      </div>
+      <label>Mô tả giọng muốn tạo</label>
+      <textarea class="textarea-sm" id="voiceDesignPrompt" placeholder="Ví dụ: Nam khoảng 40 tuổi, giọng trầm ấm, thân thiện, phát âm miền Nam tự nhiên, nói như chuyên gia tư vấn nhưng gần gũi, không lên giọng quảng cáo."></textarea>
+      <div class="toolbar">
+        <button class="btn btn-primary" id="createVoiceBtn">✨ Tạo giọng riêng</button>
+        <button class="btn btn-soft" id="useCustomVoiceBtn" disabled>✅ Dùng giọng vừa tạo</button>
+      </div>
+      <div id="voiceDesignStatus" class="status">Hệ thống sẽ tạo một ID <code>voice_...</code> cho giọng riêng; ứng dụng lưu ID này để dùng lại.</div>
+      <audio id="voicePreview" controls class="hidden"></audio>
+    </div>
+
+    <details class="advanced">
+      <summary>🎤 Nhân bản giọng của chính mình (Voice Replication)</summary>
+      <p class="small">Dùng khi muốn giọng tổng hợp bám theo chính giọng thật của người sở hữu. Hệ thống yêu cầu 2 file WAV của cùng một người trưởng thành: mẫu giọng 10–30 giây và file đồng ý.</p>
+      <div class="consent"><b>Câu đồng ý phải đọc nguyên văn:</b><br>“Tôi là chủ sở hữu giọng nói này và tôi đồng ý cho Google sử dụng giọng nói này để tạo mô hình giọng nói tổng hợp.”</div>
+      <div class="row">
+        <div><label>Mẫu giọng (WAV 10–30 giây)</label><input id="sourceVoiceFile" type="file" accept="audio/wav,.wav"></div>
+        <div><label>File đọc câu đồng ý (WAV)</label><input id="consentVoiceFile" type="file" accept="audio/wav,.wav"></div>
+      </div>
+      <label>Tên giọng nhân bản</label><input id="replicaName" placeholder="Ví dụ: Giọng Anh Duy Thức">
+      <div class="toolbar"><button class="btn btn-primary" id="replicateVoiceBtn">🧬 Tạo giọng nhân bản</button></div>
+      <div id="replicaStatus" class="status">Chỉ thực hiện với giọng mà người nói sở hữu và đã đọc câu đồng ý bắt buộc.</div>
+    </details>
+
+    <div class="subcard">
+      <h3>🔑 Dùng Voice ID đã tạo</h3>
+      <div class="keyrow"><input class="voice-id" id="manualVoiceId" placeholder="voice_... hoặc voicekey_..."><button class="btn btn-soft" id="useManualVoiceBtn">Dùng ID</button></div>
+      <div class="tagline">Có thể dán Voice Design ID hoặc Voice Replication ID đã tạo trước đó.</div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Ổn định giọng khi nội dung dài</label>
+        <select id="stabilityMode">
+          <option value="auto" selected>Tự động — khuyên dùng</option>
+          <option value="single">Một lượt — giữ nguyên TTS 3.8</option>
+          <option value="chunk">Chia đoạn & ghép WAV</option>
+        </select>
+      </div>
+      <div>
+        <label>Độ dài mỗi đoạn</label>
+        <select id="chunkSize">
+          <option value="1800">~1.800 ký tự</option>
+          <option value="3000" selected>~3.000 ký tự</option>
+          <option value="5000">~5.000 ký tự</option>
+        </select>
+      </div>
+    </div>
+
+    <hr>
+    <h2>4. Tạo giọng thông báo thường</h2>
+    <button class="btn btn-primary" style="width:100%;font-size:16px;padding:14px" id="ttsBtn">🔊 Tạo giọng thông báo — IDECO</button>
+    <div id="ttsStatus" class="status">Sẵn sàng tạo giọng đọc IDECO với phong cách, vùng miền và giọng riêng.</div>
+
+    <div class="audioBox" style="margin-top:14px">
+      <div id="wave" class="wave">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <audio id="audio" controls></audio>
+      <div class="toolbar">
+        <button class="btn btn-soft" id="downloadBtn" disabled>⬇️ Tải file WAV</button>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="card report-card" id="huyenReportStudio">
+    <div class="report-hero">
+      <div>
+        <span class="report-badge">👩‍💼 HUYỀN • ĐẠI DIỆN BGĐ • IDECO PHÂN TÍCH</span>
+        <h2 style="margin-top:9px">5. Báo cáo dài — Chuẩn hóa, Huyền phân tích & tạo giọng IDECO</h2>
+        <p>Luồng báo cáo được tách hoàn toàn khỏi “Nội dung thông báo thường”. Anh có thể dán bản báo cáo gốc vào khu <b>Chuẩn hóa</b>, dùng <b>IDECO Phân tích</b> rút gọn nhưng giữ đủ số liệu và ý chính, sau đó bấm <b>“Thêm vào nội dung báo cáo”</b>. Phần báo cáo dài được tạo giọng bằng <b>IDECO Giọng báo cáo</b>.</p>
+        <div class="report-engine">
+          <span class="engine-pill">✂️ Chuẩn hóa: IDECO Phân tích</span>
+          <span class="engine-pill">🧠 Huyền phân tích: IDECO Phân tích</span>
+          <span class="engine-pill">🎙 Báo cáo dài: IDECO Giọng báo cáo</span>
+          <span class="engine-pill">🔊 Thông báo thường: IDECO Giọng đọc</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="normalize-box">
+      <h3>A. ✨ Chuẩn hóa báo cáo bằng IDECO Phân tích</h3>
+      <div class="small">Dán <b>bản báo cáo gốc</b> vào bên trái. AI chỉ làm gọn, lấy trọng tâm và tối ưu cho lời nói; không được tự thêm số liệu, kết quả hay kết luận không có trong báo cáo.</div>
+      <div class="normalize-columns">
+        <div>
+          <label>Báo cáo gốc cần chuẩn hóa</label>
+          <textarea id="reportRawText" placeholder="Dán báo cáo dài/nguyên bản tại đây..."></textarea>
+          <div class="count"><span id="reportRawCount">0</span> ký tự</div>
+        </div>
+        <div>
+          <label>Bản chuẩn hóa trọng tâm</label>
+          <textarea id="reportNormalizedText" placeholder="Kết quả chuẩn hóa sẽ xuất hiện tại đây. Anh có thể sửa tay trước khi thêm vào Nội dung báo cáo."></textarea>
+          <div class="count"><span id="reportNormalizedCount">0</span> ký tự</div>
+        </div>
+      </div>
+      <div class="normalize-meta">
+        <div>
+          <label>Mức rút gọn</label>
+          <select id="reportNormalizeLevel">
+            <option value="compact">Rất gọn — khoảng 35–45% bản gốc</option>
+            <option value="balanced" selected>Cân bằng — khoảng 45–60% bản gốc</option>
+            <option value="detailed">Giữ chi tiết — khoảng 60–75% bản gốc</option>
+          </select>
+        </div>
+        <div><span class="savings" id="normalizeSavings">Chưa chuẩn hóa</span></div>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-primary" id="normalizeReportBtn">✨ IDECO chuẩn hóa báo cáo</button>
+        <button class="btn btn-good" id="useNormalizedReportBtn" disabled>➕ Thêm vào nội dung báo cáo</button>
+        <button class="btn btn-soft" id="clearNormalizeBtn">🧹 Xóa khu chuẩn hóa</button>
+      </div>
+      <div id="normalizeStatus" class="status">Mẹo tiết kiệm credit: chuẩn hóa trước → chỉ đưa phần trọng tâm sang TTS → Huyền phân tích trên chính bản đã chuẩn hóa.</div>
+    </div>
+
+    <div class="flow-arrow">↓ Bản đã chuẩn hóa được đưa xuống khung đọc báo cáo ↓</div>
+
+    <div class="report-source-box">
+      <h3>B. 🎙 Nội dung báo cáo — IDECO Giọng báo cáo</h3>
+      <div class="small">Đây là <b>khung đọc báo cáo riêng</b>. Huyền phân tích và Audio 1 đều lấy nội dung từ khung này; hoàn toàn không dùng chung ô “Nội dung thông báo thường” phía trên.</div>
+      <textarea id="reportText" placeholder="Nội dung báo cáo dùng để Huyền phân tích và tạo giọng sẽ nằm ở đây..."></textarea>
+      <div class="count"><span id="reportCharCount">0</span> ký tự</div>
+      <div class="toolbar">
+        <button class="btn btn-soft" id="clearReportTextBtn">Xóa nội dung báo cáo</button>
+      </div>
+    </div>
+
+    <div class="report-grid">
+      <div><label>Người lập / trình bày</label><input id="reportOwner" placeholder="Ví dụ: Nguyễn Văn A"></div>
+      <div><label>Bộ phận</label><input id="reportDepartment" placeholder="Ví dụ: Kinh doanh OTC"></div>
+      <div><label>Kỳ báo cáo</label><input id="reportPeriod" placeholder="Ví dụ: Tháng 09/2026"></div>
+    </div>
+    <div class="report-grid two">
+      <div>
+        <label>Mục tiêu / KPI được giao</label>
+        <textarea class="textarea-sm" id="reportKpi" placeholder="Ví dụ: Doanh số 1,7 tỷ; mở 20 khách mới; thu hồi công nợ..."></textarea>
+        <div class="context-field-tools">
+          <button type="button" class="btn btn-good" id="reportKpiMicBtn">🎙 Nói → Văn bản</button>
+          <button type="button" class="btn btn-soft" id="reportKpiMicStopBtn" disabled>⏹ Dừng</button>
+          <button type="button" class="btn btn-soft" id="reportKpiNormalizeBtn">✨ Chuẩn hóa AI</button>
+        </div>
+        <div id="reportKpiAssistStatus" class="context-field-status">Nói nhanh hoặc nhập tay. “Chuẩn hóa AI” chỉ sửa chính tả, dấu câu và từ nhận sai theo ngữ cảnh; không thêm KPI hay số liệu mới.</div>
+      </div>
+      <div>
+        <label>Định hướng / yêu cầu của BGĐ</label>
+        <textarea class="textarea-sm" id="reportDirection" placeholder="Ví dụ: tập trung khách hàng cũ giảm doanh số, tăng độ phủ, tuân thủ quy trình..."></textarea>
+        <div class="context-field-tools">
+          <button type="button" class="btn btn-good" id="reportDirectionMicBtn">🎙 Nói → Văn bản</button>
+          <button type="button" class="btn btn-soft" id="reportDirectionMicStopBtn" disabled>⏹ Dừng</button>
+          <button type="button" class="btn btn-soft" id="reportDirectionNormalizeBtn">✨ Chuẩn hóa AI</button>
+        </div>
+        <div id="reportDirectionAssistStatus" class="context-field-status">Dùng để khai báo nhanh định hướng quản trị. AI chỉ làm sạch câu chữ và sửa từ sai theo ngữ cảnh, không tự bổ sung yêu cầu của BGĐ.</div>
+      </div>
+    </div>
+    <div class="report-grid two">
+      <div><label>Dữ liệu so sánh nếu có</label><input id="reportComparison" placeholder="Ví dụ: kỳ trước 980 triệu; cùng kỳ 1,05 tỷ"></div>
+      <div><label>Điều Huyền cần chú ý thêm</label><input id="reportExtra" placeholder="Ví dụ: việc chưa làm, công nợ, tồn kho, SOP, thiếu deadline..."></div>
+    </div>
+    <div class="report-grid two">
+      <div><label>Âm sắc giọng Huyền</label>
+        <select id="kieReportVoice">
+          <option value="Kore" selected>Kore — chắc chắn, phù hợp họp</option>
+          <option value="Gacrux">Gacrux — trưởng thành</option>
+          <option value="Sulafat">Sulafat — ấm áp</option>
+          <option value="Zephyr">Zephyr — sáng, rõ</option>
+          <option value="Aoede">Aoede — nhẹ, tự nhiên</option>
+        </select>
+      </div>
+      <div><label>Độ dài phân tích báo cáo</label>
+        <select id="reportAnalysisDepth">
+          <option value="balanced" selected>Cân bằng — khuyên dùng</option>
+          <option value="deep">Chuyên sâu — nhiều nhận xét BGĐ</option>
+          <option value="compact">Gọn — tập trung vấn đề chính</option>
+        </select>
+      </div>
+    </div>
+    <div class="report-grid two">
+      <div><label>Vùng giọng Huyền</label>
+        <select id="huyenRegion">
+          <option value="south" selected>Miền Nam — mặc định</option>
+          <option value="standard">Tiếng Việt chuẩn</option>
+          <option value="north">Miền Bắc</option>
+          <option value="hanoi">Hà Nội</option>
+          <option value="hue">Huế</option>
+          <option value="quangngai">Quảng Ngãi</option>
+          <option value="binhdinh">Bình Định</option>
+          <option value="phuyen">Phú Yên</option>
+        </select>
+      </div>
+      <div class="huyen-region-note"><b>Huyền mặc định giọng nữ miền Nam.</b><br>Vùng giọng này chỉ áp dụng cho phần Huyền/BGĐ và các tab phân tích; không làm thay đổi giọng đọc thông báo thường.</div>
+    </div>
+
+    <div class="report-kpi-note"><b>Nguyên tắc phân tích:</b> Không tự bịa số liệu. Huyền phải tách <b>Dữ kiện → Nhận định → Vấn đề → Hành động</b>; chỉ ra điểm bất cập của báo cáo và đưa góp ý theo góc nhìn BGĐ cho <b>Kinh doanh, Kế toán, Kho vận và SOP/Quy trình</b> khi nội dung có liên quan.</div>
+    <div class="kie-note"><b>Báo cáo dài:</b> “Nội dung báo cáo” được IDECO tự chia đoạn khi cần. Chuẩn hóa trước giúp giảm số ký tự phải chuyển thành giọng, giảm credit và vẫn giữ trọng tâm để Huyền phân tích.</div>
+
+    <div class="report-actions">
+      <button class="btn btn-primary" id="analyzeReportBtn">🧠 Huyền phân tích báo cáo</button>
+      <button class="btn btn-soft" id="useReportScriptBtn" disabled>⬆️ Dùng kịch bản làm nội dung báo cáo</button>
+      <button class="btn btn-soft" id="copyActiveReportBtn" disabled>📋 Sao chép tab đang xem</button>
+    </div>
+    <div id="reportStatus" class="status">Sẵn sàng. Huyền sẽ phân tích từ khung “Nội dung báo cáo” bằng IDECO Phân tích.</div>
+
+    <div class="report-tabs" id="reportTabs">
+      <button class="report-tab active" data-report-target="reportScriptPanel">① Kịch bản trình bày</button>
+      <button class="report-tab" data-report-target="reportCommentPanel">② Nhận xét Huyền/BGĐ</button>
+      <button class="report-tab" data-report-target="reportIssuesPanel">③ Vấn đề cần khắc phục</button>
+      <button class="report-tab" data-report-target="reportActionsPanel">④ Hành động đề xuất</button>
+      <button class="report-tab" data-report-target="reportQuestionsPanel">⑤ Câu hỏi cuộc họp</button>
+      <button class="report-tab" data-report-target="reportDepartmentsPanel">⑥ Góp ý theo bộ phận</button>
+    </div>
+
+    <div id="reportScriptPanel" class="report-panel active">
+      <textarea id="reportScript" class="report-output" placeholder="Kịch bản trình bày báo cáo sẽ xuất hiện tại đây..."></textarea>
+      <div class="panel-audio-tools">
+        <div class="toolbar">
+          <button class="btn btn-soft report-section-audio-btn" data-section="script" disabled>🎙 Tạo giọng — Kịch bản trình bày báo cáo</button>
+          <button class="btn btn-soft report-section-download-btn" data-section="script" disabled>⬇️ Tải file mục này</button>
+          <button class="btn btn-danger report-section-delete-btn" data-section="script" disabled>🗑 Xóa audio</button>
+        </div>
+        <audio id="sectionAudio_script" controls></audio>
+      </div>
+    </div>
+    <div id="reportCommentPanel" class="report-panel">
+      <textarea id="reportCommentary" class="report-output" placeholder="Nhận xét của Huyền với vai trò đại diện BGĐ sẽ xuất hiện tại đây..."></textarea>
+      <div class="panel-audio-tools">
+        <div class="toolbar">
+          <button class="btn btn-soft report-section-audio-btn" data-section="commentary" disabled>🎙 Tạo giọng — Nhận xét Huyền/BGĐ</button>
+          <button class="btn btn-soft report-section-download-btn" data-section="commentary" disabled>⬇️ Tải file mục này</button>
+          <button class="btn btn-danger report-section-delete-btn" data-section="commentary" disabled>🗑 Xóa audio</button>
+        </div>
+        <audio id="sectionAudio_commentary" controls></audio>
+      </div>
+    </div>
+    <div id="reportIssuesPanel" class="report-panel">
+      <textarea id="reportIssues" class="report-output" placeholder="Các vấn đề cần khắc phục sẽ xuất hiện tại đây..."></textarea>
+      <div class="panel-audio-tools">
+        <div class="toolbar">
+          <button class="btn btn-soft report-section-audio-btn" data-section="issues" disabled>🎙 Tạo giọng — Vấn đề cần khắc phục</button>
+          <button class="btn btn-soft report-section-download-btn" data-section="issues" disabled>⬇️ Tải file mục này</button>
+          <button class="btn btn-danger report-section-delete-btn" data-section="issues" disabled>🗑 Xóa audio</button>
+        </div>
+        <audio id="sectionAudio_issues" controls></audio>
+      </div>
+    </div>
+    <div id="reportActionsPanel" class="report-panel">
+      <textarea id="reportActions" class="report-output" placeholder="Danh sách hành động đề xuất sẽ xuất hiện tại đây..."></textarea>
+      <div class="panel-audio-tools">
+        <div class="toolbar">
+          <button class="btn btn-soft report-section-audio-btn" data-section="actions" disabled>🎙 Tạo giọng — Hành động đề xuất</button>
+          <button class="btn btn-soft report-section-download-btn" data-section="actions" disabled>⬇️ Tải file mục này</button>
+          <button class="btn btn-danger report-section-delete-btn" data-section="actions" disabled>🗑 Xóa audio</button>
+        </div>
+        <audio id="sectionAudio_actions" controls></audio>
+      </div>
+    </div>
+    <div id="reportQuestionsPanel" class="report-panel">
+      <textarea id="reportQuestions" class="report-output" placeholder="Các câu hỏi cần làm rõ trong cuộc họp sẽ xuất hiện tại đây..."></textarea>
+      <div class="panel-audio-tools">
+        <div class="toolbar">
+          <button class="btn btn-soft report-section-audio-btn" data-section="questions" disabled>🎙 Tạo giọng — Câu hỏi cuộc họp</button>
+          <button class="btn btn-soft report-section-download-btn" data-section="questions" disabled>⬇️ Tải file mục này</button>
+          <button class="btn btn-danger report-section-delete-btn" data-section="questions" disabled>🗑 Xóa audio</button>
+        </div>
+        <audio id="sectionAudio_questions" controls></audio>
+      </div>
+    </div>
+    <div id="reportDepartmentsPanel" class="report-panel">
+      <textarea id="reportDepartments" class="report-output" placeholder="Góp ý riêng cho Kinh doanh, Kế toán, Kho vận và SOP sẽ xuất hiện tại đây..."></textarea>
+      <div class="panel-audio-tools">
+        <div class="toolbar">
+          <button class="btn btn-soft report-section-audio-btn" data-section="departments" disabled>🎙 Tạo giọng — Góp ý theo bộ phận</button>
+          <button class="btn btn-soft report-section-download-btn" data-section="departments" disabled>⬇️ Tải file mục này</button>
+          <button class="btn btn-danger report-section-delete-btn" data-section="departments" disabled>🗑 Xóa audio</button>
+        </div>
+        <audio id="sectionAudio_departments" controls></audio>
+      </div>
+    </div>
+
+    <div class="department-note"><b>Cách tạo giọng:</b> Mỗi tab có thể tạo, nghe, tải và <b>xóa audio riêng</b>. Nút <b>“Tạo toàn bộ phần Huyền/BGĐ”</b> sẽ lần lượt tạo đủ Nhận xét → Vấn đề → Hành động → Câu hỏi → Góp ý bộ phận, không phụ thuộc tab đang mở. Sau đó bấm <b>“Ghép tất cả file đã tạo”</b> để xuất một file cuộc họp thống nhất.</div>
+    <div class="report-actions">
+      <button class="btn btn-soft" id="createReportPart1Btn" disabled>🎙 Tạo Audio — Báo cáo</button>
+      <button class="btn btn-primary" id="createAllAnalysisAudioBtn" disabled>👩‍💼 Tạo toàn bộ phần Huyền/BGĐ</button>
+      <button class="btn btn-primary" id="mergeAllReportAudioBtn" disabled>🔗 Ghép tất cả file đã tạo</button>
+      <button class="btn btn-soft" id="stopReportAudioBtn" disabled>⏹ Dừng tất cả</button>
+    </div>
+
+    <div class="audio-parts">
+      <div class="audio-part">
+        <h3>🎙 Audio — Người lập trình bày báo cáo</h3>
+        <p>Lấy trực tiếp từ khung “Nội dung báo cáo”; IDECO tự chia đoạn khi văn bản dài rồi ghép lại.</p>
+        <audio id="reportPart1Audio" controls></audio>
+        <div class="toolbar"><button class="btn btn-soft" id="downloadReportPart1Btn" disabled>⬇️ Tải Audio báo cáo</button><button class="btn btn-danger" id="deleteReportPart1Btn" disabled>🗑 Xóa Audio báo cáo</button></div>
+      </div>
+      <div class="audio-part">
+        <h3>👩‍💼 Huyền/BGĐ — tạo theo từng mục</h3>
+        <p>Nhận xét, vấn đề, hành động, câu hỏi và góp ý bộ phận được tạo thành các file riêng ngay trong từng tab ở trên. Huyền mặc định nói giọng miền Nam.</p>
+      </div>
+    </div>
+
+    <div class="merged-box">
+      <h3>🔗 File cuộc họp đã ghép</h3>
+      <div class="small">Ghép theo thứ tự: Audio báo cáo (nếu đã tạo) → các tab phân tích đã tạo theo thứ tự hiển thị. Chỉ những file đã được tạo mới được đưa vào bản ghép.</div>
+      <audio id="reportMergedAudio" controls></audio>
+      <div class="toolbar"><button class="btn btn-primary" id="downloadMergedReportBtn" disabled>⬇️ Tải file cuộc họp WAV</button><button class="btn btn-danger" id="deleteMergedReportBtn" disabled>🗑 Xóa file đã ghép</button></div>
+    </div>
+    <div id="reportTtsStatus" class="status">Chưa tạo audio báo cáo.</div>
+  </section>
+
+</main>
+
+<!-- APP LOGIN MODAL -->
+<div class="modal open" id="appPassModal">
+  <div class="modalCard" style="max-width:440px">
+    <div class="modalHead"><h2 style="margin:0">🔐 Đăng nhập IDECO AI Voice Studio</h2></div>
+    <p class="small">Nhập mật khẩu để sử dụng ứng dụng trên thiết bị này.</p>
+    <label>Mật khẩu</label>
+    <div class="keyrow">
+      <input type="password" id="appPassword" autocomplete="current-password" placeholder="Nhập mật khẩu">
+      <button type="button" class="btn btn-soft keyToggle" data-target="appPassword">👁 Hiện</button>
+    </div>
+    <label class="inline" style="margin-top:12px;font-weight:700;cursor:pointer">
+      <input type="checkbox" id="rememberAppLogin" checked style="width:auto">
+      Ghi nhớ đăng nhập trên máy này
+    </label>
+    <button class="btn btn-primary" id="appUnlockBtn" style="width:100%;margin-top:12px">Vào ứng dụng</button>
+    <div id="appPassStatus" class="status hidden"></div>
+    <div class="small" style="margin-top:10px">Nếu chọn “Ghi nhớ”, trình duyệt lưu trạng thái đăng nhập bằng localStorage để lần sau không cần nhập lại.</div>
+  </div>
+</div>
+
+<!-- PASSWORD MODAL -->
+<div class="modal" id="passModal">
+  <div class="modalCard" style="max-width:430px">
+    <div class="modalHead"><h2 style="margin:0">🔐 Mở Cài đặt</h2><button class="close" data-close="passModal">×</button></div>
+    <p class="small">Nhập mật khẩu quản trị để xem hoặc thay đổi API.</p>
+    <label>Mật khẩu</label>
+    <div class="keyrow">
+      <input type="password" id="settingsPassword" autocomplete="off" placeholder="Nhập mật khẩu">
+      <button type="button" class="btn btn-soft keyToggle" data-target="settingsPassword">👁 Hiện</button>
+    </div>
+    <button class="btn btn-primary" id="unlockBtn" style="width:100%;margin-top:12px">Mở Cài đặt</button>
+    <div id="passStatus" class="status hidden"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal" id="settingsModal">
+  <div class="modalCard">
+    <div class="modalHead"><h2 style="margin:0">⚙️ Cài đặt hệ thống</h2><button class="close" data-close="settingsModal">×</button></div>
+
+    <h3>API hệ thống — Giọng thông báo</h3>
+    <p class="small">Ba khóa dự phòng dùng cho AI soạn lại, chép lời và giọng thông báo thường. <b>Phần báo cáo sử dụng cấu hình IDECO riêng.</b></p>
+
+    <label>API 01 — Chính</label>
+    <div class="keyrow"><input type="password" id="geminiKey1" autocomplete="off" placeholder="Nhập API key 01"><button class="btn btn-soft keyToggle" data-target="geminiKey1">👁 Hiện</button></div>
+    <label>API 02 — Dự phòng</label>
+    <div class="keyrow"><input type="password" id="geminiKey2" autocomplete="off" placeholder="Nhập API key 02"><button class="btn btn-soft keyToggle" data-target="geminiKey2">👁 Hiện</button></div>
+    <label>API 03 — Dự phòng</label>
+    <div class="keyrow"><input type="password" id="geminiKey3" autocomplete="off" placeholder="Nhập API key 03"><button class="btn btn-soft keyToggle" data-target="geminiKey3">👁 Hiện</button></div>
+    <div class="small" id="keyInfo">Chưa nạp API giọng đọc.</div>
+
+    <div style="display:none"><input id="rewriteModel" value="gemini-3.8-flash"><input id="ttsModel" value="gemini-3.8-flash-tts" readonly></div>
+
+    <hr>
+    <h3>API hệ thống — Huyền phân tích & giọng báo cáo</h3>
+    <p class="small">Cấu hình này dùng để chuẩn hóa, phân tích báo cáo và tạo Audio 1/Audio 2 cho cuộc họp.</p>
+    <label>API phân tích báo cáo</label>
+    <div class="keyrow"><input type="password" id="kieApiKey" autocomplete="off" placeholder="Nhập API phân tích"><button class="btn btn-soft keyToggle" data-target="kieApiKey">👁 Hiện</button></div>
+    <div style="display:none"><input id="kieAnalysisModel" value="gemini-3-8-flash" readonly><input id="kieReportTtsModel" value="google/gemini-3-8-flash-tts" readonly></div>
+    <div class="toolbar"><button class="btn btn-soft" id="testKieBtn">🧪 Kiểm tra API phân tích</button></div>
+
+    <hr>
+    <h3>🏢 Thông tin hoạt động công ty cho Huyền</h3>
+    <p class="small">Lưu các thông tin nền như định hướng kinh doanh, chính sách công nợ, quy trình kho vận, SOP, mục tiêu quản trị, cách phối hợp phòng ban... Huyền sẽ dùng đây làm <b>bối cảnh tư vấn</b>, nhưng không được biến thông tin nền thành số liệu thực tế của kỳ báo cáo.</p>
+    <div class="company-knowledge">
+      <label>Tiêu đề thông tin</label>
+      <input id="companyInfoTitle" placeholder="Ví dụ: Định hướng kinh doanh 2026 / Quy trình công nợ / SOP kho vận">
+      <label>Nội dung</label>
+      <textarea id="companyInfoContent" placeholder="Nhập nội dung hoạt động công ty hoặc bấm micro để nói thành văn bản..."></textarea>
+      <div class="toolbar">
+        <button class="btn btn-good" id="companyMicBtn">🎙 Nói → Văn bản</button>
+        <button class="btn btn-soft" id="companyMicStopBtn" disabled>⏹ Dừng & chép lời</button>
+        <button class="btn btn-primary" id="addCompanyInfoBtn">➕ Thêm thông tin</button>
+        <button class="btn btn-danger" id="clearCompanyDraftBtn">Xóa nội dung đang nhập</button>
+      </div>
+      <div id="companyInfoStatus" class="status">Thông tin sau khi thêm sẽ được lưu cùng cấu hình Firebase để các máy khác dùng khi Huyền phân tích.</div>
+      <div id="companyInfoList" class="company-list"></div>
+    </div>
+
+    <hr>
+    <h3>Firebase Realtime Database — đồng bộ nhiều máy</h3>
+    <div class="status ok">Đã chuyển sang Firebase: <b>thunghiem2-e58ac</b></div>
+    <p class="small">Các API và cấu hình IDECO được lưu tại Realtime Database để máy khác mở cùng ứng dụng có thể tự nạp cấu hình.</p>
+    <label>Firebase Realtime Database URL</label>
+    <input id="firebaseUrl" value="https://thunghiem2-e58ac-default-rtdb.firebaseio.com" readonly>
+    <label>Đường dẫn lưu cấu hình</label>
+    <input id="firebasePath" value="ideco_ai_voice_studio/settings">
+    <div class="toolbar">
+      <button class="btn btn-soft" id="testFirebaseBtn">🔄 Đọc thử từ Firebase</button>
+      <button class="btn btn-soft" id="testGeminiBtn">🧪 Kiểm tra API giọng đọc</button>
+      <button class="btn btn-primary" id="saveSettingsBtn">💾 Lưu & đồng bộ Firebase</button>
+    </div>
+    <div id="settingsStatus" class="status ok">Mật khẩu Cài đặt đã bật. Cấu hình sẽ đồng bộ qua Firebase <b>thunghiem2-e58ac</b>.</div>
+    <div class="toolbar"><button class="btn btn-danger" id="forgetAppLoginBtn">🔐 Quên đăng nhập trên máy này</button></div>
+    <div class="note"><b>Lưu ý bảo mật:</b> mật khẩu <b>minhtriet1973</b> chỉ khóa giao diện. Vì đây là HTML chạy phía trình duyệt, API key vẫn có thể bị xem trong mã nguồn hoặc qua mạng. Khi triển khai công khai, nên dùng Firebase Authentication/Rules hoặc máy chủ trung gian để bảo vệ khóa thật sự.</div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const ADMIN_PASS = 'minhtriet1973';
+  const APP_AUTH_KEY = 'idecoVoiceStudioRememberedLoginV1';
+  const LOCAL_KEY = 'idecoVoiceStudioConfigV2Kie';
+  const OLD_LOCAL_KEY = 'idecoVoiceStudioConfigV1';
+  const KIE_DEFAULT_KEY = '6a11cd4b360b77e7cd515b8296a00e6a';
+  const KIE_ANALYSIS_ENDPOINT = 'https://api.kie.ai/gemini-3-8-flash-openai/v1/chat/completions';
+  const KIE_TASK_CREATE = 'https://api.kie.ai/api/v1/jobs/createTask';
+  const KIE_TASK_INFO = 'https://api.kie.ai/api/v1/jobs/recordInfo';
+
+  // Firebase project configuration supplied by IDECO.
+  // Realtime Database still requires its databaseURL endpoint.
+  const FIREBASE_DATABASE_URL = "https://thunghiem2-e58ac-default-rtdb.firebaseio.com";
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDXpkN7CCLbNo5yA56J2vuhyPJUp4Y6Kyg",
+    authDomain: "thunghiem2-e58ac.firebaseapp.com",
+    databaseURL: "https://thunghiem2-e58ac-default-rtdb.firebaseio.com",
+    projectId: "thunghiem2-e58ac",
+    storageBucket: "thunghiem2-e58ac.firebasestorage.app",
+    messagingSenderId: "661298577711",
+    appId: "1:661298577711:web:0f42d8580c9aa32267a1da",
+    measurementId: "G-MYH451SB9B"
+  };
+
+  const voices = [
+    ['Zephyr','Sáng, rõ','female'],['Puck','Tươi, năng động','male'],['Charon','Thông tin, điềm tĩnh','male'],
+    ['Kore','Chắc chắn','female'],['Fenrir','Hào hứng','male'],['Leda','Trẻ trung','female'],
+    ['Orus','Chắc chắn','male'],['Aoede','Thoáng, nhẹ','female'],['Callirrhoe','Thoải mái','female'],
+    ['Autonoe','Sáng','female'],['Enceladus','Hơi thở, mềm','male'],['Iapetus','Rõ ràng','male'],
+    ['Umbriel','Thoải mái','male'],['Algieba','Mượt','male'],['Despina','Mượt','female'],
+    ['Erinome','Rõ ràng','female'],['Algenib','Khàn nhẹ','male'],['Rasalgethi','Thông tin','male'],
+    ['Laomedeia','Tươi vui','female'],['Achernar','Mềm','female'],['Alnilam','Chắc','male'],
+    ['Schedar','Cân bằng','male'],['Gacrux','Trưởng thành','female'],['Pulcherrima','Tiến về trước','female'],
+    ['Achird','Thân thiện','male'],['Zubenelgenubi','Đời thường','male'],['Vindemiatrix','Dịu dàng','female'],
+    ['Sadachbia','Sinh động','male'],['Sadaltager','Hiểu biết','male'],['Sulafat','Ấm áp','female']
+  ];
+
+  let previousText = '';
+  let recognition = null;
+  let wavBlob = null;
+  let objectUrl = null;
+  let runtimeKeys = ['', '', ''];
+  let activeKeyIndex = 0;
+  let customVoices = [];
+  let regionalVoiceIds = {};
+  let lastCreatedVoiceId = '';
+  let previewObjectUrl = null;
+  let reportWavBlob = null;
+  let reportObjectUrl = null;
+  let reportAnalysisData = null;
+  let kieRuntimeKey = KIE_DEFAULT_KEY;
+  let reportPart1Blob = null, reportPart1Url = null;
+  let reportPart2Blob = null, reportPart2Url = null;
+  let reportMergedBlob = null, reportMergedUrl = null;
+  let activeKieTasks = new Set();
+  let companyKnowledge = [];
+  let companyRecorder = null, companyStream = null, companyChunks = [];
+  let contextFieldRecorder = null, contextFieldStream = null, contextFieldChunks = [], contextFieldActive = null;
+  const reportSectionBlobs = {};
+  const reportSectionUrls = {};
+  const REPORT_SECTIONS = [
+    {key:'script', textarea:'reportScript', label:'Kịch bản trình bày'},
+    {key:'commentary', textarea:'reportCommentary', label:'Nhận xét Huyền/BGĐ'},
+    {key:'issues', textarea:'reportIssues', label:'Vấn đề cần khắc phục'},
+    {key:'actions', textarea:'reportActions', label:'Hành động đề xuất'},
+    {key:'questions', textarea:'reportQuestions', label:'Câu hỏi cuộc họp'},
+    {key:'departments', textarea:'reportDepartments', label:'Góp ý theo bộ phận'}
+  ];
+
+  function setStatus(el, msg, cls='') {
+    el.className = 'status' + (cls ? ' '+cls : '');
+    el.textContent = msg;
+  }
+  function escPath(p){ return (p||'ideco_ai_voice_studio/settings').replace(/^\/+|\/+$/g,''); }
+  function normalizeDbUrl(u){ return (u||'').trim().replace(/\/+$/,''); }
+
+  function loadLocal(){
+    try{
+      const raw=localStorage.getItem(LOCAL_KEY) || localStorage.getItem(OLD_LOCAL_KEY) || '{}';
+      const c=JSON.parse(raw);
+      $('firebaseUrl').value=FIREBASE_DATABASE_URL;
+      $('firebasePath').value=c.firebasePath || 'ideco_ai_voice_studio/settings';
+      $('rewriteModel').value=((c.rewriteModel&&c.rewriteModel!=='gemini-3.7-flash')?c.rewriteModel:'gemini-3.8-flash');
+      if($('ttsModel')) $('ttsModel').value='gemini-3.8-flash-tts';
+      if($('kieAnalysisModel')) $('kieAnalysisModel').value='gemini-3-8-flash';
+      if($('kieReportTtsModel')) $('kieReportTtsModel').value='google/gemini-3-8-flash-tts';
+      kieRuntimeKey=c.kieApiKey || KIE_DEFAULT_KEY;
+      if($('kieApiKey')) $('kieApiKey').value=kieRuntimeKey;
+      customVoices=Array.isArray(c.customVoices)?c.customVoices:[];
+      regionalVoiceIds=(c.regionalVoiceIds&&typeof c.regionalVoiceIds==='object')?c.regionalVoiceIds:{};
+      if($('regionMode')) $('regionMode').value=c.regionMode||'locked';
+      if($('huyenRegion')) $('huyenRegion').value=c.huyenRegion||'south';
+      if($('kieReportVoice') && c.kieReportVoice) $('kieReportVoice').value=c.kieReportVoice;
+      companyKnowledge=Array.isArray(c.companyKnowledge)?c.companyKnowledge:[];
+      runtimeKeys=[c.geminiKeys?.[0]||c.geminiKey||'',c.geminiKeys?.[1]||'',c.geminiKeys?.[2]||''];
+      $('geminiKey1').value=runtimeKeys[0];$('geminiKey2').value=runtimeKeys[1];$('geminiKey3').value=runtimeKeys[2];
+      updateKeyInfo(); if($('voice')) renderVoices(); if(typeof renderCompanyKnowledge==='function') renderCompanyKnowledge();
+    }catch(e){ if($('kieApiKey')) $('kieApiKey').value=KIE_DEFAULT_KEY; kieRuntimeKey=KIE_DEFAULT_KEY; }
+  }
+
+  function saveLocal(){
+    const keys=[$('geminiKey1').value.trim(),$('geminiKey2').value.trim(),$('geminiKey3').value.trim()];
+    kieRuntimeKey=$('kieApiKey')?.value.trim() || KIE_DEFAULT_KEY;
+    const c={
+      geminiKeys:keys,kieApiKey:kieRuntimeKey,
+      firebaseUrl:FIREBASE_DATABASE_URL,firebasePath:escPath($('firebasePath').value),
+      rewriteModel:$('rewriteModel').value.trim()||'gemini-3.8-flash',
+      ttsModel:'gemini-3.8-flash-tts',kieAnalysisModel:'gemini-3-8-flash',kieReportTtsModel:'google/gemini-3-8-flash-tts',
+      customVoices,regionalVoiceIds,regionMode:$('regionMode')?.value||'locked',
+      huyenRegion:$('huyenRegion')?.value||'south',kieReportVoice:$('kieReportVoice')?.value||'Kore',companyKnowledge
+    };
+    localStorage.setItem(LOCAL_KEY,JSON.stringify(c)); runtimeKeys=keys;
+    if(!runtimeKeys[activeKeyIndex]) activeKeyIndex=runtimeKeys.findIndex(Boolean);
+    if(activeKeyIndex<0) activeKeyIndex=0; return c;
+  }
+
+  function updateKeyInfo(){
+    const keys=[$('geminiKey1').value.trim(),$('geminiKey2').value.trim(),$('geminiKey3').value.trim()];
+    const ready=keys.map((k,i)=>k?`API 0${i+1}: ${k.slice(0,4)}••••${k.slice(-4)} (${k.length} ký tự)`:`API 0${i+1}: trống`);
+    $('keyInfo').textContent=ready.join(' • ');
+  }
+
+  async function firebaseRead(silent=false){
+    const url=FIREBASE_DATABASE_URL,path=escPath($('firebasePath').value);
+    const res=await fetch(`${url}/${path}.json`,{cache:'no-store'});
+    if(!res.ok) throw new Error(`Firebase trả lỗi ${res.status}. Kiểm tra Database Rules.`);
+    const data=await res.json(); if(!data) throw new Error('Chưa có cấu hình trên Firebase tại đường dẫn này.');
+    const fromFb=data.geminiKeys||(data.geminiKey?[data.geminiKey,'','']:null);
+    if(fromFb){runtimeKeys=[fromFb[0]||'',fromFb[1]||'',fromFb[2]||''];$('geminiKey1').value=runtimeKeys[0];$('geminiKey2').value=runtimeKeys[1];$('geminiKey3').value=runtimeKeys[2];}
+    if(data.kieApiKey){kieRuntimeKey=data.kieApiKey;if($('kieApiKey')) $('kieApiKey').value=kieRuntimeKey;}
+    else if(!kieRuntimeKey){kieRuntimeKey=KIE_DEFAULT_KEY;if($('kieApiKey')) $('kieApiKey').value=kieRuntimeKey;}
+    if(data.rewriteModel) $('rewriteModel').value=(data.rewriteModel==='gemini-3.7-flash'?'gemini-3.8-flash':data.rewriteModel);
+    if($('ttsModel')) $('ttsModel').value='gemini-3.8-flash-tts';
+    if(Array.isArray(data.customVoices)) customVoices=data.customVoices;
+    if(data.regionalVoiceIds&&typeof data.regionalVoiceIds==='object') regionalVoiceIds=data.regionalVoiceIds;
+    if(data.regionMode&&$('regionMode')) $('regionMode').value=data.regionMode;
+    if(data.huyenRegion&&$('huyenRegion')) $('huyenRegion').value=data.huyenRegion; else if($('huyenRegion')) $('huyenRegion').value='south';
+    if(data.kieReportVoice&&$('kieReportVoice')) $('kieReportVoice').value=data.kieReportVoice;
+    companyKnowledge=Array.isArray(data.companyKnowledge)?data.companyKnowledge:companyKnowledge;
+    localStorage.setItem(LOCAL_KEY,JSON.stringify({geminiKeys:runtimeKeys,kieApiKey:kieRuntimeKey,firebaseUrl:url,firebasePath:path,rewriteModel:$('rewriteModel').value.trim()||'gemini-3.8-flash',ttsModel:'gemini-3.8-flash-tts',kieAnalysisModel:'gemini-3-8-flash',kieReportTtsModel:'google/gemini-3-8-flash-tts',customVoices,regionalVoiceIds,regionMode:$('regionMode')?.value||'locked',huyenRegion:$('huyenRegion')?.value||'south',kieReportVoice:$('kieReportVoice')?.value||'Kore',companyKnowledge}));
+    renderVoices();updateKeyInfo();if(typeof renderCompanyKnowledge==='function')renderCompanyKnowledge();
+    if(!silent) setStatus($('settingsStatus'),'Đã đọc cấu hình IDECO từ Firebase thunghiem2-e58ac thành công.','ok');
+    return data;
+  }
+
+  async function firebaseWrite(){
+    const c=saveLocal();
+    if(!c.geminiKeys.some(Boolean)&&!c.kieApiKey) throw new Error('Chưa có API key để lưu.');
+    const payload={
+      geminiKeys:c.geminiKeys,kieApiKey:c.kieApiKey,
+      rewriteModel:c.rewriteModel,ttsModel:'gemini-3.8-flash-tts',
+      kieAnalysisModel:'gemini-3-8-flash',kieReportTtsModel:'google/gemini-3-8-flash-tts',
+      customVoices,regionalVoiceIds,regionMode:$('regionMode')?.value||'locked',
+      huyenRegion:$('huyenRegion')?.value||'south',kieReportVoice:$('kieReportVoice')?.value||'Kore',companyKnowledge,
+      updatedAt:new Date().toISOString()
+    };
+    const res=await fetch(`${c.firebaseUrl}/${c.firebasePath}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error(`Không lưu được Firebase (${res.status}). Kiểm tra Rules.`);
+    return await res.json();
+  }
+
+  function getAvailableKeys(){
+    const keys = runtimeKeys.map((key,index)=>({key,index})).filter(x=>x.key);
+    if(!keys.length) return [];
+    const ordered=[];
+    for(let offset=0; offset<3; offset++){
+      const idx=(activeKeyIndex+offset)%3;
+      const found=keys.find(x=>x.index===idx);
+      if(found) ordered.push(found);
+    }
+    return ordered;
+  }
+
+  async function ensureKeys(){
+    if(runtimeKeys.some(Boolean)) return getAvailableKeys();
+    loadLocal();
+    if(runtimeKeys.some(Boolean)) return getAvailableKeys();
+    try{ await firebaseRead(true); }catch(e){}
+    if(!runtimeKeys.some(Boolean)) throw new Error('Chưa có API giọng đọc. Vào ⚙️ Cài đặt để nhập API 01/02/03.');
+    return getAvailableKeys();
+  }
+
+  function shouldRotateKey(status, data, err){
+    const msg=(data?.error?.message || err?.message || '').toLowerCase();
+    return status===429 || status===401 || status===403 || status>=500 ||
+      msg.includes('resource_exhausted') || msg.includes('quota') ||
+      msg.includes('api key') || msg.includes('failed to fetch') ||
+      msg.includes('network');
+  }
+
+  async function geminiFetchWithFailover(url, optionsFactory, label='IDECO AI'){
+    const pool=await ensureKeys();
+    let lastErr=null;
+    for(let attempt=0; attempt<pool.length; attempt++){
+      const item=pool[attempt];
+      try{
+        const opts=optionsFactory(item.key, item.index);
+        const res=await fetch(url, opts);
+        let data={}; try{data=await res.clone().json()}catch(e){}
+        if(res.ok){
+          activeKeyIndex=item.index;
+          return {res,data,keyIndex:item.index};
+        }
+        const msg=data?.error?.message || `${label} lỗi HTTP ${res.status}`;
+        lastErr=new Error(msg);
+        if(!shouldRotateKey(res.status,data,lastErr)) throw lastErr;
+      }catch(e){
+        lastErr=e;
+        if(!shouldRotateKey(0,null,e)) throw e;
+      }
+    }
+    throw new Error((lastErr?.message || `${label} thất bại`) + ' — đã thử toàn bộ API dự phòng.');
+  }
+
+  async function ensureKieKey(){
+    let key=$('kieApiKey')?.value.trim() || kieRuntimeKey || KIE_DEFAULT_KEY;
+    if(key){kieRuntimeKey=key;return key;}
+    try{await firebaseRead(true);key=$('kieApiKey')?.value.trim()||kieRuntimeKey;}catch(e){}
+    if(!key) throw new Error('Chưa có API phân tích báo cáo. Vào ⚙️ Cài đặt để nhập và lưu Firebase.');
+    return key;
+  }
+
+  function kieMessageText(data){
+    const c=data?.choices?.[0]?.message?.content;
+    if(typeof c==='string') return c.trim();
+    if(Array.isArray(c)) return c.map(x=>x?.text||x?.content||'').join('').trim();
+    return '';
+  }
+
+  async function kieChatRaw(prompt,label='IDECO Phân tích'){
+    const key=await ensureKieKey();
+    const res=await fetch(KIE_ANALYSIS_ENDPOINT,{method:'POST',headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({stream:false,include_thoughts:false,reasoning_effort:'medium',messages:[{role:'user',content:[{type:'text',text:prompt}]}]})});
+    let data={};try{data=await res.json()}catch(e){}
+    if(!res.ok) throw new Error(data?.error?.message||data?.message||`${label} lỗi HTTP ${res.status}`);
+    const text=kieMessageText(data); if(!text) throw new Error(`${label} chưa trả nội dung.`);
+    return {text,data};
+  }
+
+  async function kieChatJson(prompt,label='IDECO Phân tích'){
+    const {text}=await kieChatRaw(prompt,label); return parseJsonLoose(text);
+  }
+
+  // ===== CHUẨN HÓA BÁO CÁO DÀI BẰNG KIE =====
+  function normalizeLevelInstruction(){
+    const level=$('reportNormalizeLevel')?.value||'balanced';
+    if(level==='compact') return 'Mục tiêu độ dài khoảng 35–45% bản gốc. Chỉ giữ dữ kiện và ý có giá trị quản trị cao.';
+    if(level==='detailed') return 'Mục tiêu độ dài khoảng 60–75% bản gốc. Giữ nhiều chi tiết nghiệp vụ quan trọng nhưng loại câu lặp và diễn giải thừa.';
+    return 'Mục tiêu độ dài khoảng 45–60% bản gốc. Cân bằng giữa ngắn gọn và đầy đủ ý chính.';
+  }
+
+  function normalizePrompt(text,partLabel=''){
+    return `Bạn là biên tập viên báo cáo điều hành doanh nghiệp Việt Nam. Hãy CHUẨN HÓA báo cáo sau để đọc thành tiếng trong cuộc họp.
+${normalizeLevelInstruction()}
+${partLabel?`Đây là ${partLabel} của một báo cáo dài.`:''}
+YÊU CẦU BẮT BUỘC:
+- Giữ nguyên và ưu tiên: doanh số, KPI, tỷ lệ, số lượng, tiền, ngày tháng, tên khách hàng, tên sản phẩm, đơn hàng, công nợ, tồn kho, cam kết, nhiệm vụ chưa hoàn tất và kế hoạch có trong nguồn.
+- Không tự thêm số liệu, nguyên nhân, kết luận, đánh giá hay giải pháp không có trong báo cáo.
+- Loại câu lặp, mô tả dài dòng, lời dẫn thừa và chi tiết không ảnh hưởng đến kết quả công việc.
+- Gom các ý trùng nhau; viết câu ngắn, rõ, tự nhiên như nhân viên đang trình bày trực tiếp trước cuộc họp.
+- Nếu báo cáo có vấn đề/chưa hoàn thành/chưa phản hồi thì PHẢI giữ lại, không được làm đẹp báo cáo bằng cách bỏ mất điểm yếu.
+- Có thể sắp xếp lại theo trình tự: Kết quả chính → Công việc đã thực hiện → Việc chưa hoàn tất/vướng mắc → Kế hoạch tiếp theo, nhưng chỉ dùng mục nào thực sự có dữ liệu.
+- Không dùng markdown table, không giải thích cách làm, không thêm lời nhận xét của Huyền/BGĐ.
+- Chỉ trả về BẢN BÁO CÁO ĐÃ CHUẨN HÓA, sẵn sàng để TTS đọc.
+
+BÁO CÁO:
+${text}`;
+  }
+
+  async function normalizeLongReportText(text){
+    const chunks=splitTextForTTS(String(text||''),8500);
+    const partials=[];
+    for(let i=0;i<chunks.length;i++){
+      setStatus($('normalizeStatus'),`IDECO đang chuẩn hóa phần ${i+1}/${chunks.length}...`,'busy');
+      const {text:out}=await kieChatRaw(normalizePrompt(chunks[i],`phần ${i+1}/${chunks.length}`),`IDECO chuẩn hóa phần ${i+1}`);
+      partials.push(out.trim());
+    }
+    if(partials.length===1) return partials[0];
+
+    let combined=partials.join('\n\n');
+    // Nếu báo cáo cực dài, nén thêm một tầng để tránh một request tổng hợp quá lớn.
+    if(combined.length>18000){
+      const midChunks=splitTextForTTS(combined,9000),mid=[];
+      for(let i=0;i<midChunks.length;i++){
+        setStatus($('normalizeStatus'),`Đang hợp nhất trung gian ${i+1}/${midChunks.length}...`,'busy');
+        const {text:out}=await kieChatRaw(normalizePrompt(midChunks[i],`nhóm tổng hợp ${i+1}/${midChunks.length}`),`IDECO hợp nhất ${i+1}`);
+        mid.push(out.trim());
+      }
+      combined=mid.join('\n\n');
+    }
+
+    setStatus($('normalizeStatus'),'IDECO đang hợp nhất bản chuẩn hóa cuối và loại ý trùng...','busy');
+    const finalPrompt=`Hãy hợp nhất các phần báo cáo đã được rút gọn bên dưới thành MỘT báo cáo liền mạch, ngắn gọn và sẵn sàng đọc trong cuộc họp.
+${normalizeLevelInstruction()}
+Bắt buộc giữ tất cả số liệu/KPI/tên riêng/việc chưa hoàn thành còn xuất hiện trong các phần. Loại ý trùng. Không thêm nhận xét, nguyên nhân hay giải pháp mới. Chỉ trả văn bản báo cáo cuối cùng, không giải thích.
+
+CÁC PHẦN ĐÃ CHUẨN HÓA:
+${combined}`;
+    const {text:finalText}=await kieChatRaw(finalPrompt,'IDECO hợp nhất báo cáo');
+    return finalText.trim();
+  }
+
+  function updateNormalizeCounts(){
+    if($('reportRawCount')) $('reportRawCount').textContent=($('reportRawText')?.value.length||0).toLocaleString('vi-VN');
+    if($('reportNormalizedCount')) $('reportNormalizedCount').textContent=($('reportNormalizedText')?.value.length||0).toLocaleString('vi-VN');
+  }
+  function updateReportCount(){if($('reportCharCount')) $('reportCharCount').textContent=($('reportText')?.value.length||0).toLocaleString('vi-VN');}
+  function refreshReportAudio1Button(){if($('createReportPart1Btn')) $('createReportPart1Btn').disabled=!($('reportText')?.value.trim());}
+  function updateNormalizeSavings(){
+    const a=$('reportRawText')?.value.length||0,b=$('reportNormalizedText')?.value.length||0;
+    if(!$('normalizeSavings')) return;
+    if(!a||!b){$('normalizeSavings').textContent='Chưa chuẩn hóa';return;}
+    const saved=Math.max(0,Math.round((1-b/a)*100));
+    $('normalizeSavings').textContent=`Từ ${a.toLocaleString('vi-VN')} → ${b.toLocaleString('vi-VN')} ký tự • giảm khoảng ${saved}%`;
+  }
+
+  if($('reportRawText')) $('reportRawText').addEventListener('input',updateNormalizeCounts);
+  if($('reportNormalizedText')) $('reportNormalizedText').addEventListener('input',()=>{updateNormalizeCounts();updateNormalizeSavings();$('useNormalizedReportBtn').disabled=!$('reportNormalizedText').value.trim();});
+  if($('reportText')) $('reportText').addEventListener('input',()=>{updateReportCount();refreshReportAudio1Button();});
+
+  if($('normalizeReportBtn')) $('normalizeReportBtn').onclick=async()=>{
+    const source=$('reportRawText').value.trim()||$('reportText').value.trim();
+    if(!source){setStatus($('normalizeStatus'),'Hãy dán báo cáo gốc vào ô “Báo cáo gốc cần chuẩn hóa”.','err');return;}
+    try{
+      $('normalizeReportBtn').disabled=true;$('useNormalizedReportBtn').disabled=true;
+      setStatus($('normalizeStatus'),'IDECO đang đọc báo cáo và lấy các ý trọng tâm...','busy');
+      const out=await normalizeLongReportText(source);
+      $('reportNormalizedText').value=out;updateNormalizeCounts();updateNormalizeSavings();
+      $('useNormalizedReportBtn').disabled=!out.trim();
+      setStatus($('normalizeStatus'),'Đã chuẩn hóa xong. Kiểm tra bản bên phải rồi bấm “Thêm vào nội dung báo cáo”.','ok');
+    }catch(e){setStatus($('normalizeStatus'),e.message,'err')}
+    finally{$('normalizeReportBtn').disabled=false}
+  };
+
+  if($('useNormalizedReportBtn')) $('useNormalizedReportBtn').onclick=()=>{
+    const v=$('reportNormalizedText').value.trim();if(!v)return;
+    $('reportText').value=v;updateReportCount();refreshReportAudio1Button();
+    $('reportText').scrollIntoView({behavior:'smooth',block:'center'});
+    setStatus($('normalizeStatus'),'Đã thêm toàn bộ bản chuẩn hóa vào “Nội dung báo cáo”. Bây giờ có thể Huyền phân tích hoặc tạo Audio 1.','ok');
+  };
+  if($('clearNormalizeBtn')) $('clearNormalizeBtn').onclick=()=>{$('reportRawText').value='';$('reportNormalizedText').value='';updateNormalizeCounts();updateNormalizeSavings();$('useNormalizedReportBtn').disabled=true;setStatus($('normalizeStatus'),'Đã xóa khu chuẩn hóa.','ok');};
+  if($('clearReportTextBtn')) $('clearReportTextBtn').onclick=()=>{$('reportText').value='';updateReportCount();refreshReportAudio1Button();};
+
+  function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+  function extractKieResultUrl(data){
+    let r=data?.data?.resultJson ?? data?.resultJson ?? null;
+    if(typeof r==='string'){try{r=JSON.parse(r)}catch(e){}}
+    const candidates=[r?.resultUrls?.[0],r?.resultUrl,r?.url,r?.audioUrl,r?.audio_url,r?.output?.url,r?.output?.audio_url,data?.data?.resultUrl,data?.data?.url];
+    const direct=candidates.find(x=>typeof x==='string'&&/^https?:/i.test(x));if(direct)return direct;
+    const walk=o=>{if(!o)return'';if(typeof o==='string'&&/^https?:/i.test(o)&&/\.(wav|mp3|m4a|aac|ogg)(\?|$)/i.test(o))return o;if(Array.isArray(o)){for(const x of o){const f=walk(x);if(f)return f}}else if(typeof o==='object'){for(const x of Object.values(o)){const f=walk(x);if(f)return f}}return''};
+    return walk(r)||walk(data?.data)||'';
+  }
+
+  async function kieCreateTtsSingle(text,style,onProgress){
+    const key=await ensureKieKey();
+    const voice=$('kieReportVoice')?.value||'Kore';
+    const model=$('kieReportTtsModel')?.value||'google/gemini-3-8-flash-tts';
+    const create=await fetch(KIE_TASK_CREATE,{method:'POST',headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,input:{temperature:0.72,speakers:[{speaker_id:'Speaker 1',voice_name:voice}],dialogue_turns:[{speaker_id:'Speaker 1',style,text}]}})});
+    let created={};try{created=await create.json()}catch(e){}
+    if(!create.ok||!created?.data?.taskId) throw new Error(created?.msg||created?.message||`IDECO Voice không tạo được tác vụ (${create.status}).`);
+    const taskId=created.data.taskId;activeKieTasks.add(taskId);
+    for(let attempt=0;attempt<80;attempt++){
+      if(onProgress) onProgress(attempt);
+      await sleep(attempt<10?1800:2600);
+      const q=await fetch(`${KIE_TASK_INFO}?taskId=${encodeURIComponent(taskId)}`,{headers:{'Authorization':`Bearer ${key}`}});
+      let info={};try{info=await q.json()}catch(e){}
+      if(!q.ok) throw new Error(info?.msg||`Không đọc được trạng thái IDECO Voice (${q.status}).`);
+      const state=String(info?.data?.state||'').toLowerCase();
+      if(state==='success'){
+        activeKieTasks.delete(taskId);
+        const url=extractKieResultUrl(info); if(!url) throw new Error('Hệ thống báo hoàn tất nhưng chưa trả URL âm thanh.');
+        const ar=await fetch(url); if(!ar.ok) throw new Error(`Không tải được audio (${ar.status}).`);
+        return await ar.blob();
+      }
+      if(state==='fail'||state==='failed'){
+        activeKieTasks.delete(taskId); throw new Error(info?.data?.failMsg||'IDECO Voice tạo audio thất bại.');
+      }
+    }
+    activeKieTasks.delete(taskId); throw new Error('IDECO Voice mất quá nhiều thời gian. Hãy thử lại.');
+  }
+
+  function splitForKieTts(text,maxChars=3200){return splitTextForTTS(String(text||''),maxChars);}
+
+  async function blobToPcm24k(blob){
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC) throw new Error('Trình duyệt chưa hỗ trợ AudioContext để ghép file.');
+    const ac=new AC();
+    try{
+      const decoded=await ac.decodeAudioData((await blob.arrayBuffer()).slice(0));
+      const targetRate=24000, frames=Math.max(1,Math.ceil(decoded.duration*targetRate));
+      const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;if(!OC) throw new Error('Trình duyệt chưa hỗ trợ OfflineAudioContext để ghép file.');const offline=new OC(1,frames,targetRate),src=offline.createBufferSource();src.buffer=decoded;src.connect(offline.destination);src.start();
+      const rendered=await offline.startRendering(),f=rendered.getChannelData(0),bytes=new Uint8Array(f.length*2),dv=new DataView(bytes.buffer);
+      for(let i=0;i<f.length;i++){const x=Math.max(-1,Math.min(1,f[i]));dv.setInt16(i*2,x<0?x*0x8000:x*0x7fff,true);}
+      return bytes;
+    }finally{try{await ac.close()}catch(e){}}
+  }
+
+  async function mergeAudioBlobsToWav(blobs,silenceMs=450){
+    const parts=[];for(const b of blobs) parts.push(await blobToPcm24k(b));
+    return pcm16ToWav(concatPCM(parts,silenceMs,24000,1),24000,1);
+  }
+
+  async function kieTtsText(text,style,statusPrefix='Đang tạo audio'){
+    const chunks=splitForKieTts(text,3200),blobs=[];
+    for(let i=0;i<chunks.length;i++){
+      setStatus($('reportTtsStatus'),`${statusPrefix} • đoạn ${i+1}/${chunks.length} • IDECO Giọng báo cáo...`,'busy');
+      blobs.push(await kieCreateTtsSingle(chunks[i],style));
+    }
+    return blobs.length===1?blobs[0]:await mergeAudioBlobsToWav(blobs,180);
+  }
+
+  function renderVoices(){
+    const filter=$('gender').value;
+    const selected=$('voice').value;
+    $('voice').innerHTML='';
+
+    const pre=document.createElement('optgroup');
+    pre.label='Giọng dựng sẵn IDECO';
+    voices.filter(v=>filter==='all'||v[2]===filter).forEach(v=>{
+      const o=document.createElement('option'); o.value=v[0]; o.textContent=`${v[0]} — ${v[1]}`; pre.appendChild(o);
+    });
+    $('voice').appendChild(pre);
+
+    if(customVoices.length){
+      const custom=document.createElement('optgroup'); custom.label='Giọng riêng / nhân bản';
+      customVoices.forEach(v=>{
+        const o=document.createElement('option');
+        o.value=v.id;
+        o.textContent=`${v.name || 'Giọng riêng'} — ${v.type==='replicated'?'Nhân bản':'Voice Design'}`;
+        custom.appendChild(o);
+      });
+      $('voice').appendChild(custom);
+    }
+
+    if([...$('voice').options].some(o=>o.value===selected)) $('voice').value=selected;
+    else if(filter==='female' && [...$('voice').options].some(o=>o.value==='Kore')) $('voice').value='Kore';
+    else if(filter==='male' && [...$('voice').options].some(o=>o.value==='Puck')) $('voice').value='Puck';
+  }
+
+  function rememberCustomVoice(id,name,type='prompted'){
+    if(!id) return;
+    const idx=customVoices.findIndex(v=>v.id===id);
+    const item={id,name:name||id,type};
+    if(idx>=0) customVoices[idx]={...customVoices[idx],...item}; else customVoices.unshift(item);
+    renderVoices();
+    try{ saveLocal(); }catch(e){}
+  }
+
+  const REGION_STYLE={
+    standard:'standard, neutral Vietnamese pronunciation',
+    south:'authentic Southern Vietnamese accent, natural everyday Southern cadence; do not drift into Northern or Central Vietnamese pronunciation',
+    north:'authentic Northern Vietnamese accent with clear Northern consonants and natural Northern cadence; do not drift into Southern Vietnamese pronunciation',
+    hanoi:'authentic native Hà Nội Vietnamese accent, educated everyday Hanoi speech, elegant and conversational; do not sound Southern/Saigon or Central Vietnamese',
+    hue:'authentic native Huế Vietnamese accent from Central Vietnam, clearly recognizable Huế regional identity and melodic cadence; do not sound Southern/Saigon or Northern/Hà Nội',
+    quangngai:'authentic native Quảng Ngãi Vietnamese accent, clearly recognizable Central Vietnamese regional identity; do not drift into Southern/Saigon or Northern/Hà Nội',
+    binhdinh:'authentic native Bình Định Vietnamese accent, clearly recognizable South-Central Vietnamese regional identity and cadence; do not drift into Saigon/Southern or Northern/Hà Nội',
+    phuyen:'authentic native Phú Yên Vietnamese accent, clearly recognizable South-Central Vietnamese regional identity and cadence; do not drift into Saigon/Southern or Northern/Hà Nội'
+  };
+
+  const REGION_DESIGN={
+    south:'A native Vietnamese speaker born and raised in Southern Vietnam. The base vocal identity must have a clearly recognizable, natural Southern Vietnamese accent and everyday Southern cadence. Keep the regional pronunciation consistent in every sentence. Do not drift toward Hà Nội/Northern Vietnamese or Central Vietnamese. Sound like a real local adult in normal conversation, not a parody or exaggerated imitation.',
+    north:'A native Vietnamese speaker born and raised in Northern Vietnam. The base vocal identity must have a clearly recognizable, natural Northern Vietnamese accent. Keep Northern pronunciation and cadence consistent in every sentence. Do not drift toward Saigon/Southern Vietnamese or Central Vietnamese. Natural educated everyday speech, never caricatured.',
+    hanoi:'A native Vietnamese speaker born and raised in Hà Nội. The base vocal identity must be unmistakably Hà Nội Vietnamese: natural educated everyday Hanoi pronunciation, rhythm and intonation. Do not sound Saigon/Southern and do not sound Central Vietnamese. Maintain the Hanoi regional identity throughout long passages without accent drift. Natural human speech, not theatrical.',
+    hue:'A native Vietnamese speaker born and raised in Huế, Central Vietnam. The BASE vocal identity must be unmistakably Huế Vietnamese, with authentic everyday Huế pronunciation, melodic Central Vietnamese cadence, vowel/consonant coloration and local rhythm maintained consistently in every sentence. IMPORTANT: do NOT sound Saigon/Southern Vietnamese and do NOT sound Hà Nội/Northern Vietnamese. The Huế identity must remain clearly audible even in formal narration. Sound like a real educated adult from Huế, understandable nationally, never parody or exaggerated imitation.',
+    quangngai:'A native Vietnamese speaker born and raised in Quảng Ngãi, Central Vietnam. The BASE vocal identity must be clearly and consistently Quảng Ngãi Vietnamese, with authentic local cadence and regional pronunciation. IMPORTANT: do NOT drift into Saigon/Southern Vietnamese or Hà Nội/Northern Vietnamese. Natural educated local speech, understandable nationally, not a caricature.',
+    binhdinh:'A native Vietnamese speaker born and raised in Bình Định, South-Central Vietnam. The BASE vocal identity must be clearly and consistently Bình Định Vietnamese, with authentic local cadence and regional pronunciation. IMPORTANT: do NOT drift into Saigon/Southern Vietnamese or Hà Nội/Northern Vietnamese. Natural educated local speech, understandable nationally, not a caricature.',
+    phuyen:'A native Vietnamese speaker born and raised in Phú Yên, South-Central Vietnam. The BASE vocal identity must be clearly and consistently Phú Yên Vietnamese, with authentic local cadence and regional pronunciation. IMPORTANT: do NOT drift into Saigon/Southern Vietnamese or Hà Nội/Northern Vietnamese. Natural educated local speech, understandable nationally, not a caricature.'
+  };
+
+  const REGION_LABEL={standard:'Tiếng Việt chuẩn',south:'Miền Nam',north:'Miền Bắc',hanoi:'Hà Nội',hue:'Huế',quangngai:'Quảng Ngãi',binhdinh:'Bình Định',phuyen:'Phú Yên'};
+
+  function isCustomVoice(v){ return /^voice(key)?_/i.test(v||''); }
+
+  function inferVoiceGender(voice){
+    const found=voices.find(v=>v[0]===voice);
+    if(found) return found[2];
+    const selected=$('gender')?.value;
+    if(selected==='male'||selected==='female') return selected;
+    return $('designGender')?.value || 'neutral';
+  }
+
+  function regionalVoiceKey(region,gender){
+    return `${region}__${gender||'neutral'}__v2`;
+  }
+
+  async function createRegionalVoice(region,gender,baseVoice){
+    const model=$('ttsModel')?.value || 'gemini-3.8-flash-tts';
+    const regional=REGION_DESIGN[region];
+    if(!regional) return baseVoice;
+    const voiceTrait=voices.find(v=>v[0]===baseVoice)?.[1] || 'natural, warm and conversational';
+    const displayName=`IDECO ${REGION_LABEL[region]} ${gender==='male'?'Nam':gender==='female'?'Nữ':'Trung tính'} v2`;
+    const prompt=[
+      gender==='male'?'Adult male Vietnamese voice':gender==='female'?'Adult female Vietnamese voice':'Adult gender-neutral Vietnamese voice',
+      regional,
+      `Vocal character: ${voiceTrait}. Human-like studio fidelity, natural breathing, conversational realism, expressive but never overacted.`
+    ].join('. ');
+    const {data,keyIndex}=await geminiFetchWithFailover(
+      'https://generativelanguage.googleapis.com/v1beta/voices',
+      key=>({
+        method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({store:true,voice:{model,type:'prompted',display_name:displayName,gender,language_code:'vi-VN',prompted:{input:prompt}}})
+      }),
+      `Voice Design ${REGION_LABEL[region]}`
+    );
+    const id=data?.id || data?.voice?.id;
+    if(!id) throw new Error(`Hệ thống chưa trả về Voice ID cho giọng ${REGION_LABEL[region]}.`);
+    rememberCustomVoice(id,displayName,'prompted');
+    const sample=data?.sample_audio?.data || data?.sampleAudio?.data;
+    const mime=data?.sample_audio?.mime_type || data?.sampleAudio?.mimeType || 'audio/wav';
+    if(sample) setVoicePreviewFromBase64(sample,mime);
+    regionalVoiceIds[regionalVoiceKey(region,gender)]={id,name:displayName,region,gender,createdAt:new Date().toISOString()};
+    try{ saveLocal(); await firebaseWrite(); }catch(e){}
+    return {id,keyIndex};
+  }
+
+  async function resolveVoiceForRegion(baseVoice){
+    const region=$('region')?.value || 'standard';
+    const mode=$('regionMode')?.value || 'locked';
+    if(region==='standard' || mode!=='locked') return {voice:baseVoice,autoRegional:false};
+    const gender=inferVoiceGender(baseVoice);
+    const key=regionalVoiceKey(region,gender);
+    const cached=regionalVoiceIds[key];
+    if(cached?.id){
+      rememberCustomVoice(cached.id,cached.name||`IDECO ${REGION_LABEL[region]}`,'prompted');
+      return {voice:cached.id,autoRegional:true,cached:true,gender};
+    }
+    setStatus($('ttsStatus'),`Lần đầu dùng ${REGION_LABEL[region]}: đang tạo và khóa một Voice Design ${gender==='male'?'Nam':gender==='female'?'Nữ':'Trung tính'} riêng cho vùng này...`,'busy');
+    const created=await createRegionalVoice(region,gender,baseVoice);
+    return {voice:created.id,autoRegional:true,cached:false,gender};
+  }
+
+  function buildSpeechStyle(voice){
+    const bits=[
+      $('readStyle').value,
+      `emotion: ${$('emotion').value}, ${$('emotionLevel').value}`,
+      `pace: ${$('pace').value}`,
+      $('emphasis').value,
+      $('pauseStyle').value
+    ];
+    // Regional accent is an immutable trait ideally carried by a designed/replicated voice.
+    // For prebuilt voices we still pass a concise regional delivery target for immediate use.
+    if(!isCustomVoice(voice) && $('region').value!=='standard') bits.push(REGION_STYLE[$('region').value]);
+    if(isCustomVoice(voice) && $('regionMode')?.value==='locked') bits.push('preserve the designed regional accent consistently; never drift to another Vietnamese region');
+    const extra=$('voiceInstruction').value.trim();
+    if(extra) bits.push(extra);
+    return bits.filter(Boolean).join('; ');
+  }
+
+  function updateCount(){ $('charCount').textContent=$('text').value.length.toLocaleString('vi-VN'); }
+
+  $('openSettings').onclick=()=>{ $('settingsPassword').value=''; $('passStatus').classList.add('hidden'); $('passModal').classList.add('open'); setTimeout(()=>$('settingsPassword').focus(),80); };
+  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).classList.remove('open'));
+  document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m && m.id!=='appPassModal')m.classList.remove('open')}));
+
+  function applyRememberedAppLogin(){
+    try{
+      if(localStorage.getItem(APP_AUTH_KEY)==='1'){
+        $('appPassModal')?.classList.remove('open');
+        return true;
+      }
+    }catch(e){}
+    $('appPassModal')?.classList.add('open');
+    setTimeout(()=>$('appPassword')?.focus(),100);
+    return false;
+  }
+  function unlockApp(){
+    const input=$('appPassword');
+    if(input?.value===ADMIN_PASS){
+      try{
+        if($('rememberAppLogin')?.checked) localStorage.setItem(APP_AUTH_KEY,'1');
+        else localStorage.removeItem(APP_AUTH_KEY);
+      }catch(e){}
+      $('appPassModal')?.classList.remove('open');
+      if($('appPassStatus')) $('appPassStatus').classList.add('hidden');
+      input.value='';
+    }else{
+      $('appPassStatus')?.classList.remove('hidden');
+      if($('appPassStatus')) setStatus($('appPassStatus'),'Mật khẩu không đúng.','err');
+      input?.select();
+    }
+  }
+  if($('appUnlockBtn')) $('appUnlockBtn').onclick=unlockApp;
+  if($('appPassword')) $('appPassword').addEventListener('keydown',e=>{if(e.key==='Enter')unlockApp()});
+  if($('forgetAppLoginBtn')) $('forgetAppLoginBtn').onclick=()=>{
+    try{localStorage.removeItem(APP_AUTH_KEY)}catch(e){}
+    setStatus($('settingsStatus'),'Đã xóa ghi nhớ đăng nhập trên máy này. Lần mở ứng dụng tiếp theo sẽ yêu cầu mật khẩu.','ok');
+  };
+
+  function unlock(){
+    if($('settingsPassword').value===ADMIN_PASS){
+      $('passModal').classList.remove('open'); loadLocal(); $('settingsModal').classList.add('open');
+    }else{
+      $('passStatus').classList.remove('hidden'); setStatus($('passStatus'),'Mật khẩu không đúng.','err'); $('settingsPassword').select();
+    }
+  }
+  $('unlockBtn').onclick=unlock;
+  $('settingsPassword').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
+
+  document.querySelectorAll('.keyToggle').forEach(btn=>btn.onclick=()=>{
+    const i=$(btn.dataset.target);
+    i.type=i.type==='password'?'text':'password';
+    btn.textContent=i.type==='password'?'👁 Hiện':'🙈 Ẩn';
+  });
+  ['geminiKey1','geminiKey2','geminiKey3'].forEach(id=>$(id).addEventListener('input',updateKeyInfo));
+
+  $('saveSettingsBtn').onclick=async()=>{
+    try{
+      setStatus($('settingsStatus'),'Đang lưu cấu hình...','busy');
+      saveLocal();
+      if($('firebaseUrl').value.trim()){
+        await firebaseWrite();
+        setStatus($('settingsStatus'),'Đã lưu cấu hình IDECO trên máy này và đồng bộ lên Firebase thunghiem2-e58ac.','ok');
+      }else{
+        setStatus($('settingsStatus'),'Đã lưu trên máy này. Chưa đồng bộ Firebase vì Database URL đang để trống.','ok');
+      }
+    }catch(e){setStatus($('settingsStatus'),e.message,'err')}
+  };
+  $('testFirebaseBtn').onclick=async()=>{
+    try{setStatus($('settingsStatus'),'Đang đọc cấu hình từ Firebase...','busy'); await firebaseRead(false)}
+    catch(e){setStatus($('settingsStatus'),e.message,'err')}
+  };
+
+  $('testGeminiBtn').onclick=async()=>{
+    try{
+      setStatus($('settingsStatus'),'Đang kiểm tra lần lượt API 01/02/03...','busy');
+      saveLocal();
+      const pool=await ensureKeys();
+      const lines=[];
+      for(const item of pool){
+        try{
+          const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models',{
+            method:'GET',headers:{'x-goog-api-key':item.key}
+          });
+          let d={}; try{d=await r.json()}catch(e){}
+          lines.push(`API 0${item.index+1}: ${r.ok?'OK':('LỖI '+r.status)}${!r.ok&&d?.error?.message?' — '+d.error.message:''}`);
+        }catch(e){
+          lines.push(`API 0${item.index+1}: lỗi kết nối`);
+        }
+      }
+      setStatus($('settingsStatus'),lines.join('\\n'),lines.some(x=>x.includes(': OK'))?'ok':'err');
+    }catch(e){setStatus($('settingsStatus'),e.message,'err')}
+  };
+
+  if($('testKieBtn')) $('testKieBtn').onclick=async()=>{
+    try{
+      saveLocal();setStatus($('settingsStatus'),'Đang kiểm tra API phân tích...','busy');
+      const {text}=await kieChatRaw('Chỉ trả lời đúng một từ: OK','Kiểm tra API phân tích');
+      setStatus($('settingsStatus'),`API phân tích hoạt động: ${text.slice(0,40)}. IDECO Phân tích đã sẵn sàng.`,'ok');
+    }catch(e){setStatus($('settingsStatus'),e.message,'err')}
+  };
+
+  $('text').addEventListener('input',updateCount);
+  $('clearBtn').onclick=()=>{$('text').value='';updateCount()};
+  $('gender').onchange=renderVoices;
+  if($('regionMode')) $('regionMode').addEventListener('change',()=>{try{saveLocal()}catch(e){}});
+
+
+  function setVoicePreviewFromBase64(b64,mime='audio/wav'){
+    if(!b64) return;
+    const bytes=base64ToBytes(b64);
+    if(previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+    previewObjectUrl=URL.createObjectURL(new Blob([bytes],{type:mime||'audio/wav'}));
+    $('voicePreview').src=previewObjectUrl;
+    $('voicePreview').classList.remove('hidden');
+  }
+
+  $('createVoiceBtn').onclick=async()=>{
+    const name=$('designName').value.trim() || `IDECO ${REGION_LABEL[$('region').value] || 'Voice'}`;
+    const free=$('voiceDesignPrompt').value.trim();
+    const gender=$('designGender').value;
+    const regional=REGION_STYLE[$('region').value] || REGION_STYLE.standard;
+    const prompt=[
+      `${gender==='male'?'Male':gender==='female'?'Female':'Gender-neutral'} Vietnamese adult voice`,
+      regional,
+      free || 'natural human-like timbre, warm, conversational, clean studio sound, expressive but not exaggerated'
+    ].join('. ');
+    try{
+      $('createVoiceBtn').disabled=true;
+      setStatus($('voiceDesignStatus'),'Đang tạo giọng riêng IDECO...','busy');
+      const model=$('ttsModel')?.value || 'gemini-3.8-flash-tts';
+      const {data,keyIndex}=await geminiFetchWithFailover(
+        'https://generativelanguage.googleapis.com/v1beta/voices',
+        key=>({
+          method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key},
+          body:JSON.stringify({store:true,voice:{model,type:'prompted',display_name:name,gender,language_code:'vi-VN',prompted:{input:prompt}}})
+        }), 'IDECO Voice Design'
+      );
+      const id=data?.id || data?.voice?.id;
+      if(!id) throw new Error('Hệ thống chưa trả về Voice ID.');
+      lastCreatedVoiceId=id;
+      rememberCustomVoice(id,name,'prompted');
+      $('voice').value=id;
+      $('useCustomVoiceBtn').disabled=false;
+      const sample=data?.sample_audio?.data || data?.sampleAudio?.data;
+      const mime=data?.sample_audio?.mime_type || data?.sampleAudio?.mimeType || 'audio/wav';
+      if(sample) setVoicePreviewFromBase64(sample,mime);
+      setStatus($('voiceDesignStatus'),`Đã tạo “${name}” • ${id} • API 0${keyIndex+1}. Giọng đã được chọn để sử dụng.`, 'ok');
+      try{await firebaseWrite()}catch(e){}
+    }catch(e){setStatus($('voiceDesignStatus'),e.message,'err')}
+    finally{$('createVoiceBtn').disabled=false}
+  };
+
+  $('useCustomVoiceBtn').onclick=()=>{
+    if(!lastCreatedVoiceId) return;
+    renderVoices(); $('voice').value=lastCreatedVoiceId;
+    setStatus($('voiceDesignStatus'),`Đang dùng giọng riêng ${lastCreatedVoiceId}.`,'ok');
+  };
+
+  $('useManualVoiceBtn').onclick=()=>{
+    const id=$('manualVoiceId').value.trim();
+    if(!/^voice(key)?_/i.test(id)){setStatus($('voiceDesignStatus'),'Voice ID phải bắt đầu bằng voice_ hoặc voicekey_.','err');return}
+    rememberCustomVoice(id,'Voice ID nhập tay',id.startsWith('voicekey_')?'replicated':'prompted');
+    $('voice').value=id;
+    setStatus($('voiceDesignStatus'),`Đã chọn ${id}.`,'ok');
+  };
+
+  $('replicateVoiceBtn').onclick=async()=>{
+    const source=$('sourceVoiceFile').files?.[0];
+    const consent=$('consentVoiceFile').files?.[0];
+    const name=$('replicaName').value.trim() || 'IDECO Replicated Voice';
+    if(!source||!consent){setStatus($('replicaStatus'),'Hãy chọn đủ 2 file WAV: mẫu giọng và file đọc câu đồng ý.','err');return}
+    try{
+      $('replicateVoiceBtn').disabled=true;
+      setStatus($('replicaStatus'),'Đang xác minh và tạo giọng nhân bản...','busy');
+      const sourceB64=await fileToBase64(source), consentB64=await fileToBase64(consent);
+      const model=$('ttsModel')?.value || 'gemini-3.8-flash-tts';
+      const {data,keyIndex}=await geminiFetchWithFailover(
+        'https://generativelanguage.googleapis.com/v1beta/voices',
+        key=>({
+          method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key},
+          body:JSON.stringify({store:true,voice:{model,type:'replicated',display_name:name,replicated:{source_audio:{mime_type:source.type||'audio/wav',data:sourceB64},consent_audio:{mime_type:consent.type||'audio/wav',data:consentB64}}}})
+        }), 'IDECO Voice Replication'
+      );
+      const id=data?.id || data?.voice?.id;
+      if(!id) throw new Error('Hệ thống chưa trả về Voice ID sau khi nhân bản.');
+      lastCreatedVoiceId=id;
+      rememberCustomVoice(id,name,'replicated');
+      $('voice').value=id;
+      $('useCustomVoiceBtn').disabled=false;
+      setStatus($('replicaStatus'),`Đã tạo giọng nhân bản “${name}” • ${id} • API 0${keyIndex+1}.`, 'ok');
+      try{await firebaseWrite()}catch(e){}
+    }catch(e){setStatus($('replicaStatus'),e.message,'err')}
+    finally{$('replicateVoiceBtn').disabled=false}
+  };
+
+  document.querySelectorAll('#rewriteStyles .pill').forEach(p=>p.onclick=()=>{
+    document.querySelectorAll('#rewriteStyles .pill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+  });
+
+  $('rewriteBtn').onclick=async()=>{
+    const txt=$('text').value.trim();
+    if(!txt){setStatus($('rewriteStatus'),'Hãy nhập nội dung trước.','err');return}
+    const style=document.querySelector('#rewriteStyles .pill.active')?.dataset.style||'Tự nhiên';
+    const extra=$('rewriteExtra').value.trim();
+    try{
+      $('rewriteBtn').disabled=true; setStatus($('rewriteStatus'),'AI đang soạn lại nội dung...','busy');
+      const model=$('rewriteModel').value.trim()||'gemini-3.8-flash';
+      const prompt=`Bạn là biên tập viên tiếng Việt chuyên nghiệp. Hãy viết lại nội dung bên dưới theo phong cách "${style}" để khi đọc thành giọng nói nghe tự nhiên.
+Yêu cầu bắt buộc:
+- Giữ nguyên ý nghĩa, tên riêng, tên sản phẩm, con số, giá tiền, ngày tháng và thông tin quan trọng.
+- Không tự bịa dữ kiện.
+- Tối ưu câu văn cho lời nói, dễ nghe, có nhịp nghỉ hợp lý.
+- Chỉ trả về bản nội dung đã viết lại, không giải thích, không tiêu đề "Bản viết lại".
+${extra?'- Yêu cầu thêm: '+extra:''}
+
+NỘI DUNG:
+${txt}`;
+      const {res,data,keyIndex}=await geminiFetchWithFailover(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        key=>({
+          method:'POST',
+          headers:{'Content-Type':'application/json','x-goog-api-key':key},
+          body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.65}})
+        }),
+        'IDECO soạn lại'
+      );
+      const out=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
+      if(!out) throw new Error('IDECO AI chưa trả về nội dung văn bản.');
+      previousText=$('text').value; $('text').value=out; $('undoBtn').disabled=false; updateCount();
+      setStatus($('rewriteStatus'),`Đã soạn lại theo phong cách “${style}” bằng API 0${keyIndex+1}. Bạn có thể chỉnh tiếp trước khi tạo giọng.`, 'ok');
+    }catch(e){setStatus($('rewriteStatus'),e.message,'err')}
+    finally{$('rewriteBtn').disabled=false}
+  };
+  $('undoBtn').onclick=()=>{if(previousText){const now=$('text').value;$('text').value=previousText;previousText=now;updateCount()}};
+
+  // ===== KHO THÔNG TIN HOẠT ĐỘNG CÔNG TY =====
+  function renderCompanyKnowledge(){
+    const box=$('companyInfoList');if(!box)return;box.innerHTML='';
+    if(!companyKnowledge.length){box.innerHTML='<div class="company-empty">Chưa có thông tin hoạt động công ty được lưu.</div>';return;}
+    companyKnowledge.forEach((item,idx)=>{
+      const wrap=document.createElement('div');wrap.className='company-item';
+      const head=document.createElement('div');head.className='company-item-head';
+      const title=document.createElement('div');title.className='company-item-title';title.textContent=`${idx+1}. ${item.title||'Thông tin công ty'}`;
+      const del=document.createElement('button');del.className='btn btn-danger';del.style.padding='7px 10px';del.textContent='Xóa';del.onclick=async()=>{
+        companyKnowledge=companyKnowledge.filter(x=>x.id!==item.id);renderCompanyKnowledge();saveLocal();
+        try{await firebaseWrite();setStatus($('companyInfoStatus'),'Đã xóa thông tin và đồng bộ Firebase.','ok')}catch(e){setStatus($('companyInfoStatus'),'Đã xóa trên máy này nhưng chưa đồng bộ Firebase: '+e.message,'err')}
+      };
+      const content=document.createElement('div');content.className='company-item-content';content.textContent=item.content||'';
+      head.append(title,del);wrap.append(head,content);box.appendChild(wrap);
+    });
+  }
+  async function transcribeCompanyAudio(blob){
+    if(!blob||!blob.size)throw new Error('Không có dữ liệu ghi âm.');
+    const b64=await fileToBase64(blob),mime=blob.type||'audio/webm',model=$('rewriteModel').value.trim()||'gemini-3.8-flash';
+    const {data}=await geminiFetchWithFailover(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,key=>({method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:'Chép chính xác lời nói tiếng Việt thành văn bản để lưu làm thông tin hoạt động công ty. Giữ nguyên tên riêng, số liệu, quy trình, chính sách và thuật ngữ. Chỉ trả văn bản đã chép.'},{inlineData:{mimeType:mime,data:b64}}]}],generationConfig:{temperature:0.1}})}),'IDECO chép lời thông tin công ty');
+    const out=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();if(!out)throw new Error('IDECO chưa trả về bản chép lời.');return out;
+  }
+  if($('companyMicBtn')) $('companyMicBtn').onclick=async()=>{
+    try{
+      if(!navigator.mediaDevices?.getUserMedia||!window.isSecureContext)throw new Error('Micro cần chạy trên HTTPS và được trình duyệt cấp quyền.');
+      companyStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});companyChunks=[];
+      const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported?.(t));companyRecorder=new MediaRecorder(companyStream,preferred?{mimeType:preferred}:undefined);
+      companyRecorder.ondataavailable=e=>{if(e.data?.size)companyChunks.push(e.data)};
+      companyRecorder.onstop=async()=>{try{const blob=new Blob(companyChunks,{type:companyRecorder.mimeType||'audio/webm'});companyStream?.getTracks().forEach(t=>t.stop());$('companyMicBtn').disabled=false;$('companyMicStopBtn').disabled=true;setStatus($('companyInfoStatus'),'Đang chuyển lời nói thành văn bản...','busy');const out=await transcribeCompanyAudio(blob);const cur=$('companyInfoContent').value.trim();$('companyInfoContent').value=(cur?cur+'\n':'')+out;setStatus($('companyInfoStatus'),'Đã chép lời. Kiểm tra nội dung rồi bấm “Thêm thông tin”.','ok')}catch(e){setStatus($('companyInfoStatus'),e.message,'err')}};
+      companyRecorder.start(500);$('companyMicBtn').disabled=true;$('companyMicStopBtn').disabled=false;setStatus($('companyInfoStatus'),'🎙 Đang ghi âm thông tin công ty...','busy');
+    }catch(e){setStatus($('companyInfoStatus'),e.message,'err')}
+  };
+  if($('companyMicStopBtn')) $('companyMicStopBtn').onclick=()=>{try{if(companyRecorder?.state==='recording')companyRecorder.stop()}catch(e){setStatus($('companyInfoStatus'),e.message,'err')}};
+  if($('clearCompanyDraftBtn')) $('clearCompanyDraftBtn').onclick=()=>{$('companyInfoTitle').value='';$('companyInfoContent').value='';setStatus($('companyInfoStatus'),'Đã xóa nội dung đang nhập.','ok')};
+  if($('addCompanyInfoBtn')) $('addCompanyInfoBtn').onclick=async()=>{
+    const title=$('companyInfoTitle').value.trim(),content=$('companyInfoContent').value.trim();if(!title&&!content){setStatus($('companyInfoStatus'),'Hãy nhập tiêu đề hoặc nội dung trước.','err');return;}
+    const id=(globalThis.crypto?.randomUUID?.()||('info_'+Date.now()));companyKnowledge.push({id,title:title||'Thông tin công ty',content,updatedAt:new Date().toISOString()});renderCompanyKnowledge();saveLocal();$('companyInfoTitle').value='';$('companyInfoContent').value='';
+    try{await firebaseWrite();setStatus($('companyInfoStatus'),'Đã thêm thông tin và đồng bộ Firebase. Huyền sẽ dùng làm bối cảnh khi phân tích báo cáo.','ok')}catch(e){setStatus($('companyInfoStatus'),'Đã lưu trên máy này nhưng chưa đồng bộ Firebase: '+e.message,'err')}
+  };
+
+
+  // ===== NHẬP NHANH KPI / ĐỊNH HƯỚNG: MICRO + CHUẨN HÓA AI =====
+  const CONTEXT_FIELD_CONFIG = {
+    kpi:{
+      fieldId:'reportKpi', micBtn:'reportKpiMicBtn', stopBtn:'reportKpiMicStopBtn', normalizeBtn:'reportKpiNormalizeBtn', statusId:'reportKpiAssistStatus',
+      label:'Mục tiêu / KPI được giao', purpose:'mục tiêu, KPI, chỉ tiêu, đầu việc và kết quả phải đạt'
+    },
+    direction:{
+      fieldId:'reportDirection', micBtn:'reportDirectionMicBtn', stopBtn:'reportDirectionMicStopBtn', normalizeBtn:'reportDirectionNormalizeBtn', statusId:'reportDirectionAssistStatus',
+      label:'Định hướng / yêu cầu của BGĐ', purpose:'định hướng, yêu cầu quản trị, ưu tiên công việc và nguyên tắc điều hành của Ban Giám đốc'
+    }
+  };
+
+  function setMiniStatus(id,msg,cls=''){
+    const el=$(id); if(!el)return;
+    el.className='context-field-status'+(cls?' '+cls:'');
+    el.textContent=msg;
+  }
+
+  async function transcribeContextFieldAudio(blob,cfg){
+    if(!blob||!blob.size) throw new Error('Không có dữ liệu ghi âm.');
+    const b64=await fileToBase64(blob), mime=blob.type||'audio/webm';
+    const model=$('rewriteModel').value.trim()||'gemini-3.8-flash';
+    const dept=$('reportDepartment')?.value.trim()||'';
+    const owner=$('reportOwner')?.value.trim()||'';
+    const context=[owner?`Người báo cáo: ${owner}`:'',dept?`Bộ phận: ${dept}`:''].filter(Boolean).join('. ');
+    const prompt=`Chép chính xác lời nói tiếng Việt thành văn bản dùng cho trường "${cfg.label}" trong báo cáo công việc doanh nghiệp. ${context?context+'. ':''}
+Ưu tiên nhận đúng thuật ngữ nghiệp vụ theo ngữ cảnh ${cfg.purpose}.
+Giữ nguyên tên riêng, tên khách hàng, tên sản phẩm, số tiền, tỷ lệ, số lượng, ngày tháng, mã hàng, KPI và thuật ngữ SOP nếu nghe được.
+Không tự thêm ý, không tóm tắt, không suy luận. Chỉ trả văn bản đã chép.`;
+    const {data}=await geminiFetchWithFailover(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      key=>({method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:prompt},{inlineData:{mimeType:mime,data:b64}}]}],generationConfig:{temperature:0.05}})}),
+      'IDECO chép lời'
+    );
+    const out=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
+    if(!out) throw new Error('IDECO chưa trả về bản chép lời.');
+    return out;
+  }
+
+  async function startContextFieldMic(key){
+    const cfg=CONTEXT_FIELD_CONFIG[key]; if(!cfg)return;
+    try{
+      if(contextFieldRecorder?.state==='recording') throw new Error('Một ô khác đang ghi âm. Hãy bấm Dừng trước.');
+      if(!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) throw new Error('Micro cần chạy trên HTTPS và được trình duyệt cấp quyền.');
+      contextFieldActive=key;
+      contextFieldStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+      contextFieldChunks=[];
+      const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported?.(t));
+      contextFieldRecorder=new MediaRecorder(contextFieldStream,preferred?{mimeType:preferred}:undefined);
+      contextFieldRecorder.ondataavailable=e=>{if(e.data?.size)contextFieldChunks.push(e.data)};
+      contextFieldRecorder.onstop=async()=>{
+        const activeCfg=CONTEXT_FIELD_CONFIG[contextFieldActive]||cfg;
+        try{
+          const blob=new Blob(contextFieldChunks,{type:contextFieldRecorder.mimeType||'audio/webm'});
+          contextFieldStream?.getTracks().forEach(t=>t.stop());
+          $(activeCfg.micBtn).disabled=false; $(activeCfg.stopBtn).disabled=true;
+          setMiniStatus(activeCfg.statusId,'Đang chuyển lời nói thành văn bản...','busy');
+          const out=await transcribeContextFieldAudio(blob,activeCfg);
+          const field=$(activeCfg.fieldId), cur=field.value.trim();
+          field.value=(cur?cur+'\n':'')+out;
+          field.dispatchEvent(new Event('input',{bubbles:true}));
+          setMiniStatus(activeCfg.statusId,'Đã chép lời. Anh có thể bấm “Chuẩn hóa AI” để sửa chính tả và từ nhận sai theo đúng ngữ cảnh.','ok');
+        }catch(e){setMiniStatus(activeCfg.statusId,e.message,'err')}
+        finally{contextFieldRecorder=null;contextFieldStream=null;contextFieldChunks=[];contextFieldActive=null;}
+      };
+      contextFieldRecorder.start(500);
+      $(cfg.micBtn).disabled=true; $(cfg.stopBtn).disabled=false;
+      setMiniStatus(cfg.statusId,`🎙 Đang ghi âm ${cfg.label.toLowerCase()}... Bấm Dừng khi nói xong.`,'busy');
+    }catch(e){setMiniStatus(cfg.statusId,e.message,'err')}
+  }
+
+  function stopContextFieldMic(key){
+    const cfg=CONTEXT_FIELD_CONFIG[key];
+    try{
+      if(contextFieldActive!==key || contextFieldRecorder?.state!=='recording') return;
+      setMiniStatus(cfg.statusId,'Đang kết thúc ghi âm...','busy');
+      contextFieldRecorder.stop();
+    }catch(e){setMiniStatus(cfg.statusId,e.message,'err')}
+  }
+
+  async function normalizeContextField(key){
+    const cfg=CONTEXT_FIELD_CONFIG[key]; if(!cfg)return;
+    const field=$(cfg.fieldId), raw=field.value.trim();
+    if(!raw){setMiniStatus(cfg.statusId,`Hãy nhập hoặc nói ${cfg.label.toLowerCase()} trước.`,`err`);return;}
+    const btn=$(cfg.normalizeBtn);
+    try{
+      btn.disabled=true;
+      setMiniStatus(cfg.statusId,'IDECO đang sửa chính tả và đối chiếu từ theo ngữ cảnh...','busy');
+      const dept=$('reportDepartment')?.value.trim()||'chưa khai báo';
+      const owner=$('reportOwner')?.value.trim()||'chưa khai báo';
+      const prompt=`Bạn là biên tập viên dữ liệu báo cáo nội bộ IDECO. Hãy CHUẨN HÓA duy nhất nội dung trường "${cfg.label}" dưới đây.
+Bối cảnh: Người lập/trình bày: ${owner}. Bộ phận: ${dept}. Loại thông tin: ${cfg.purpose}.
+
+QUY TẮC TUYỆT ĐỐI:
+- Chỉ sửa lỗi chính tả, viết hoa, dấu câu, lỗi gõ và từ bị nhận sai do giọng nói khi có thể xác định chắc chắn từ đúng theo ngữ cảnh.
+- Giữ nguyên ý nghĩa gốc, thứ tự ý chính và mức độ cam kết.
+- GIỮ NGUYÊN mọi số liệu, số tiền, tỷ lệ, ngày tháng, tên riêng, tên khách hàng, tên sản phẩm, mã hàng, tên bộ phận và KPI nếu không có căn cứ chắc chắn để sửa.
+- Không thêm KPI, mục tiêu, deadline, số liệu, hành động, nhận xét hoặc yêu cầu BGĐ mới.
+- Không rút gọn, không mở rộng, không phân tích, không giải thích.
+- Nếu một từ không chắc chắn, giữ nguyên thay vì đoán.
+- Chỉ trả về văn bản đã chuẩn hóa, không tiêu đề, không ghi chú.
+
+VĂN BẢN GỐC:
+${raw}`;
+      const {text:out}=await kieChatRaw(prompt,'IDECO chuẩn hóa khai báo');
+      if(!out.trim()) throw new Error('IDECO chưa trả nội dung chuẩn hóa.');
+      field.value=out.trim(); field.dispatchEvent(new Event('input',{bubbles:true}));
+      setMiniStatus(cfg.statusId,'Đã chuẩn hóa: chỉ sửa câu chữ/từ sai theo ngữ cảnh, không thêm dữ kiện mới. Anh có thể chỉnh tay nếu cần.','ok');
+    }catch(e){setMiniStatus(cfg.statusId,e.message,'err')}
+    finally{btn.disabled=false;}
+  }
+
+  if($('reportKpiMicBtn')) $('reportKpiMicBtn').onclick=()=>startContextFieldMic('kpi');
+  if($('reportKpiMicStopBtn')) $('reportKpiMicStopBtn').onclick=()=>stopContextFieldMic('kpi');
+  if($('reportKpiNormalizeBtn')) $('reportKpiNormalizeBtn').onclick=()=>normalizeContextField('kpi');
+  if($('reportDirectionMicBtn')) $('reportDirectionMicBtn').onclick=()=>startContextFieldMic('direction');
+  if($('reportDirectionMicStopBtn')) $('reportDirectionMicStopBtn').onclick=()=>stopContextFieldMic('direction');
+  if($('reportDirectionNormalizeBtn')) $('reportDirectionNormalizeBtn').onclick=()=>normalizeContextField('direction');
+
+
+  // Mobile-friendly microphone recording -> AI transcription.
+  let mediaRecorder=null, mediaStream=null, audioChunks=[];
+
+  function fileToBase64(file){
+    return new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload=()=>resolve(String(r.result).split(',')[1]||'');
+      r.onerror=reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function transcribeAudioBlob(blob){
+    if(!blob || !blob.size) throw new Error('Không có dữ liệu ghi âm.');
+    setStatus($('micStatus'),'AI đang chuyển giọng nói thành văn bản...','busy');
+    const b64=await fileToBase64(blob);
+    const mime=blob.type || 'audio/webm';
+    const model=$('rewriteModel').value.trim()||'gemini-3.8-flash';
+    const {data,keyIndex}=await geminiFetchWithFailover(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      key=>({
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({
+          contents:[{parts:[
+            {text:'Chép chính xác lời nói tiếng Việt trong file âm thanh thành văn bản. Giữ nguyên tên riêng, tên sản phẩm, số liệu và giá tiền nếu nghe được. Chỉ trả về phần văn bản đã chép, không giải thích.'},
+            {inlineData:{mimeType:mime,data:b64}}
+          ]}],
+          generationConfig:{temperature:0.1}
+        })
+      }),
+      'IDECO chép lời'
+    );
+    const out=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
+    if(!out) throw new Error('IDECO AI chưa trả về bản chép lời.');
+    const cur=$('text').value.trim();
+    $('text').value=(cur?cur+'\\n':'')+out;
+    updateCount();
+    setStatus($('micStatus'),`Đã chép lời bằng API 0${keyIndex+1}.`,'ok');
+  }
+
+  $('micBtn').onclick=async()=>{
+    try{
+      if(!navigator.mediaDevices?.getUserMedia){
+        throw new Error('Trình duyệt chưa cho phép truy cập micro. Nếu đang mở file HTML trực tiếp, hãy dùng bản chạy qua HTTPS hoặc dùng nút “Chọn file ghi âm”.');
+      }
+      if(!window.isSecureContext){
+        throw new Error('Micro trên mobile đang bị chặn vì trang chưa chạy trong môi trường HTTPS an toàn. Hãy mở ứng dụng qua HTTPS; hoặc ghi âm bằng điện thoại rồi dùng “Chọn file ghi âm”.');
+      }
+      mediaStream=await navigator.mediaDevices.getUserMedia({audio:{
+        echoCancellation:true,noiseSuppression:true,autoGainControl:true
+      }});
+      audioChunks=[];
+      const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported?.(t));
+      mediaRecorder=new MediaRecorder(mediaStream,preferred?{mimeType:preferred}:undefined);
+      mediaRecorder.ondataavailable=e=>{if(e.data?.size)audioChunks.push(e.data)};
+      mediaRecorder.onstop=async()=>{
+        try{
+          const blob=new Blob(audioChunks,{type:mediaRecorder.mimeType||'audio/webm'});
+          mediaStream?.getTracks().forEach(t=>t.stop());
+          $('micBtn').disabled=false;$('stopMicBtn').disabled=true;
+          await transcribeAudioBlob(blob);
+        }catch(e){setStatus($('micStatus'),e.message,'err')}
+      };
+      mediaRecorder.start(500);
+      $('micBtn').disabled=true;$('stopMicBtn').disabled=false;
+      setStatus($('micStatus'),'🎙️ Đang ghi âm... Bấm “Dừng & chép lời” khi nói xong.','busy');
+    }catch(e){setStatus($('micStatus'),e.message,'err')}
+  };
+  $('stopMicBtn').onclick=()=>{
+    try{
+      if(mediaRecorder?.state==='recording') mediaRecorder.stop();
+    }catch(e){setStatus($('micStatus'),e.message,'err')}
+  };
+  $('uploadAudioBtn').onclick=()=>$('audioFileInput').click();
+  $('audioFileInput').onchange=async()=>{
+    const f=$('audioFileInput').files?.[0];
+    if(!f)return;
+    try{await transcribeAudioBlob(f)}catch(e){setStatus($('micStatus'),e.message,'err')}
+    finally{$('audioFileInput').value=''}
+  };
+
+  function base64ToBytes(base64){
+    const bin=atob(base64); const arr=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    return arr;
+  }
+
+  function pcm16ToWav(pcmBytes, sampleRate=24000, channels=1){
+    const header=new ArrayBuffer(44); const v=new DataView(header);
+    const write=(off,s)=>[...s].forEach((c,i)=>v.setUint8(off+i,c.charCodeAt(0)));
+    write(0,'RIFF'); v.setUint32(4,36+pcmBytes.length,true); write(8,'WAVE'); write(12,'fmt ');
+    v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,channels,true); v.setUint32(24,sampleRate,true);
+    v.setUint32(28,sampleRate*channels*2,true); v.setUint16(32,channels*2,true); v.setUint16(34,16,true);
+    write(36,'data'); v.setUint32(40,pcmBytes.length,true);
+    return new Blob([header,pcmBytes],{type:'audio/wav'});
+  }
+
+  function findAudioPayload(obj){
+    if(!obj||typeof obj!=='object') return null;
+    if(obj.output_audio?.data) return {data:obj.output_audio.data,mimeType:obj.output_audio.mime_type||obj.output_audio.mimeType||'audio/wav'};
+    if(obj.outputAudio?.data) return {data:obj.outputAudio.data,mimeType:obj.outputAudio.mimeType||'audio/wav'};
+    if(obj.inlineData?.data && String(obj.inlineData?.mimeType||'').startsWith('audio/')) return {data:obj.inlineData.data,mimeType:obj.inlineData.mimeType};
+    if(obj.inline_data?.data && String(obj.inline_data?.mime_type||'').startsWith('audio/')) return {data:obj.inline_data.data,mimeType:obj.inline_data.mime_type};
+    for(const k of Object.keys(obj)){ const found=findAudioPayload(obj[k]); if(found) return found; }
+    return null;
+  }
+
+  function parseWavPCM(bytes){
+    if(bytes.length<44) return null;
+    const text=(o,n)=>String.fromCharCode(...bytes.slice(o,o+n));
+    if(text(0,4)!=='RIFF'||text(8,4)!=='WAVE') return null;
+    const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+    let off=12, sampleRate=24000, channels=1, bits=16, data=null;
+    while(off+8<=bytes.length){
+      const id=text(off,4), size=dv.getUint32(off+4,true), p=off+8;
+      if(id==='fmt ' && size>=16){channels=dv.getUint16(p+2,true);sampleRate=dv.getUint32(p+4,true);bits=dv.getUint16(p+14,true)}
+      if(id==='data'){data=bytes.slice(p,Math.min(p+size,bytes.length));break}
+      off=p+size+(size%2);
+    }
+    if(!data||bits!==16) return null;
+    return {pcm:data,sampleRate,channels};
+  }
+
+  function splitTextForTTS(text,maxChars=3000){
+    const clean=text.replace(/\r/g,'').trim();
+    if(clean.length<=maxChars) return [clean];
+    const parts=clean.split(/(?<=[.!?…])\s+|\n+/).map(s=>s.trim()).filter(Boolean);
+    const chunks=[]; let cur='';
+    for(const p of parts){
+      if(!cur){cur=p;continue}
+      if((cur+' '+p).length<=maxChars){cur+=' '+p}
+      else{
+        chunks.push(cur);
+        if(p.length<=maxChars) cur=p;
+        else{
+          let rest=p;
+          while(rest.length>maxChars){
+            let cut=rest.lastIndexOf(' ',maxChars);
+            if(cut<maxChars*.6)cut=maxChars;
+            chunks.push(rest.slice(0,cut).trim()); rest=rest.slice(cut).trim();
+          }
+          cur=rest;
+        }
+      }
+    }
+    if(cur)chunks.push(cur);
+    return chunks;
+  }
+
+  function concatPCM(chunks,silenceMs=90,sampleRate=24000,channels=1){
+    const silenceSamples=Math.floor(sampleRate*silenceMs/1000);
+    const silence=new Uint8Array(silenceSamples*2*channels);
+    const total=chunks.reduce((s,c)=>s+c.length,0)+Math.max(0,chunks.length-1)*silence.length;
+    const out=new Uint8Array(total); let off=0;
+    chunks.forEach((c,i)=>{out.set(c,off);off+=c.length;if(i<chunks.length-1){out.set(silence,off);off+=silence.length}});
+    return out;
+  }
+
+  async function generateTTSChunk(textChunk,voice,style,chunkNo,totalChunks){
+    const model=$('ttsModel')?.value || 'gemini-3.8-flash-tts';
+    const ttsUrl=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const {data,keyIndex}=await geminiFetchWithFailover(
+      ttsUrl,
+      key=>({
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({
+          contents:[{role:'user',parts:[{
+            text:textChunk,
+            speech_metadata:{style:style||''}
+          }]}],
+          generationConfig:{
+            responseModalities:['AUDIO'],
+            speechConfig:{voiceConfig:{voice}}
+          }
+        })
+      }),
+      'IDECO Giọng đọc'
+    );
+    const payload=findAudioPayload(data);
+    if(!payload?.data) throw new Error(`Đoạn ${chunkNo}: IDECO Voice chưa trả về dữ liệu audio.`);
+    return {bytes:base64ToBytes(payload.data),mimeType:payload.mimeType||'audio/wav',keyIndex};
+  }
+
+
+  // ===== HUYỀN AI PHÂN TÍCH & TRÌNH BÀY BÁO CÁO — KIE =====
+  function parseJsonLoose(text){
+    const raw=String(text||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+    try{return JSON.parse(raw)}catch(e){}
+    const a=raw.indexOf('{'),b=raw.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(raw.slice(a,b+1));
+    throw new Error('AI đã trả nội dung nhưng chưa đúng JSON. Hãy bấm phân tích lại.');
+  }
+
+  function companyKnowledgeText(){
+    if(!Array.isArray(companyKnowledge)||!companyKnowledge.length) return 'Chưa có thông tin hoạt động công ty được lưu.';
+    return companyKnowledge.map((x,i)=>`${i+1}. ${x.title||'Thông tin công ty'}\n${x.content||''}`).join('\n\n');
+  }
+
+  function employeeDisplayName(){
+    return ($('reportOwner')?.value||'').trim();
+  }
+
+  function normalizePersonName(name){
+    return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,' ').trim().replace(/\s+/g,' ').toUpperCase();
+  }
+
+  function isNguyenAnhTuanReporter(){
+    return normalizePersonName(employeeDisplayName())==='NGUYEN ANH TUAN';
+  }
+
+  function employeeAddressInstruction(){
+    if(isNguyenAnhTuanReporter()){
+      return 'XƯNG HÔ BẮT BUỘC: người lập/trình bày báo cáo là NGUYỄN ANH TUẤN. Huyền phải gọi lần đầu là “Chú Nguyễn Anh Tuấn”; các lần sau có thể gọi tự nhiên là “Chú”. Tuyệt đối không gọi người này là “Bạn”, “Em”, “Anh” hay “em”. “Chú Triết” vẫn chỉ dành riêng cho Giám đốc.';
+    }
+    return 'XƯNG HÔ BẮT BUỘC: với người lập/trình bày báo cáo, Huyền luôn gọi là “Bạn” hoặc “Bạn + họ tên”. Tuyệt đối không gọi nhân viên là “Em/em”. “Chú Triết” chỉ dành riêng cho Giám đốc.';
+  }
+
+  // Lớp bảo vệ sau AI: nhân viên thông thường = “Bạn”; riêng NGUYỄN ANH TUẤN = “Chú Nguyễn Anh Tuấn” / “Chú”.
+  function enforceEmployeeAddress(text){
+    let s=String(text||'');
+    if(isNguyenAnhTuanReporter()){
+      s=s.replace(/\b(?:Em|Bạn|Anh)\s+Nguyễn\s+Anh\s+Tuấn\b/gi,'Chú Nguyễn Anh Tuấn');
+      s=s.replace(/\bNguyễn\s+Anh\s+Tuấn\b/gi,'Nguyễn Anh Tuấn');
+      s=s.replace(/\bEm\b/g,'Chú').replace(/\bem\b/g,'chú');
+      s=s.replace(/\bBạn\b/g,'Chú').replace(/\bbạn\b/g,'chú');
+      return s;
+    }
+    s=s.replace(/\bEm\b/g,'Bạn').replace(/\bem\b/g,'bạn');
+    return s;
+  }
+
+  function reportContextText(){
+    const lines=[['Người lập / trình bày',$('reportOwner').value.trim()],['Bộ phận',$('reportDepartment').value.trim()],['Kỳ báo cáo',$('reportPeriod').value.trim()],['Mục tiêu / KPI được giao',$('reportKpi').value.trim()],['Định hướng / yêu cầu của BGĐ',$('reportDirection').value.trim()],['Dữ liệu so sánh',$('reportComparison').value.trim()],['Điều cần chú ý thêm',$('reportExtra').value.trim()]].filter(x=>x[1]);
+    const periodContext=lines.length?lines.map(x=>`${x[0]}: ${x[1]}`).join('\n'):'Không có bối cảnh bổ sung ngoài nội dung báo cáo.';
+    return `THÔNG TIN NỀN HOẠT ĐỘNG CÔNG TY (dùng để định hướng góp ý, KHÔNG mặc định coi là kết quả của kỳ báo cáo):\n${companyKnowledgeText()}\n\nTHÔNG TIN RIÊNG CỦA KỲ BÁO CÁO:\n${periodContext}`;
+  }
+
+  function toIssueText(items){
+    if(!Array.isArray(items)||!items.length)return 'Chưa phát hiện vấn đề đủ căn cứ từ nội dung đã cung cấp.';
+    return items.map((x,i)=>{if(typeof x==='string')return `${i+1}. ${x}`;const p=[`${i+1}. ${x.issue||x.problem||'Vấn đề cần lưu ý'}`];if(x.evidence)p.push(`   • Căn cứ: ${x.evidence}`);if(x.impact)p.push(`   • Ảnh hưởng: ${x.impact}`);if(x.priority)p.push(`   • Mức ưu tiên: ${x.priority}`);return p.join('\n')}).join('\n\n');
+  }
+
+  function toActionText(items){
+    if(!Array.isArray(items)||!items.length)return 'Chưa có hành động đề xuất cụ thể.';
+    return items.map((x,i)=>{if(typeof x==='string')return `${i+1}. ${x}`;const p=[`${i+1}. ${x.action||x.task||'Hành động'}`];if(x.reason)p.push(`   • Vì sao: ${x.reason}`);if(x.owner_suggestion)p.push(`   • Phụ trách gợi ý: ${x.owner_suggestion}`);if(x.deadline_suggestion)p.push(`   • Thời hạn: ${x.deadline_suggestion}`);if(x.priority)p.push(`   • Mức ưu tiên: ${x.priority}`);return p.join('\n')}).join('\n\n');
+  }
+
+  function toQuestionText(items){return (!Array.isArray(items)||!items.length)?'Hiện chưa có câu hỏi cần làm rõ thêm.':items.map((x,i)=>`${i+1}. ${typeof x==='string'?x:(x.question||JSON.stringify(x))}`).join('\n');}
+
+  function toDepartmentText(obj){
+    const names=['Kinh doanh','Kế toán','Kho vận','SOP / Quy trình'];
+    if(!obj||typeof obj!=='object')return names.map(n=>`${n.toUpperCase()}\n• Chưa đủ dữ kiện để nhận xét.`).join('\n\n');
+    return names.map(name=>{
+      const keys=Object.keys(obj);const key=keys.find(k=>k.toLowerCase().replace(/\s+/g,'').includes(name.split('/')[0].trim().toLowerCase().replace(/\s+/g,''))) || (name.startsWith('SOP')?keys.find(k=>/sop|quy/i.test(k)):null);
+      const v=key?obj[key]:null;const arr=Array.isArray(v)?v:(v?[v]:['Chưa đủ dữ kiện để nhận xét trực tiếp từ báo cáo.']);
+      return `${name.toUpperCase()}\n`+arr.map((x,i)=>`• ${typeof x==='string'?x:(x.advice||x.recommendation||x.observation||JSON.stringify(x))}`).join('\n');
+    }).join('\n\n');
+  }
+
+  function activeReportTextarea(){const panel=document.querySelector('.report-panel.active');return panel?.querySelector('textarea')||$('reportScript');}
+  function setReportButtons(enabled){['useReportScriptBtn','copyActiveReportBtn','createAllAnalysisAudioBtn'].forEach(id=>{if($(id))$(id).disabled=!enabled});document.querySelectorAll('.report-section-audio-btn').forEach(b=>b.disabled=!enabled);refreshReportAudio1Button();}
+  document.querySelectorAll('.report-tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.report-tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.report-panel').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$(btn.dataset.reportTarget)?.classList.add('active')}));
+
+  function splitReportForAnalysis(text,maxChars=9000){return splitTextForTTS(String(text||''),maxChars);}
+
+  function analysisDepthInstruction(){
+    const d=$('reportAnalysisDepth')?.value||'balanced';
+    if(d==='deep')return 'Phân tích chuyên sâu: ưu tiên nguyên nhân, rủi ro, kiểm soát, KPI và hành động quản trị cụ thể.';
+    if(d==='compact')return 'Phân tích gọn: chỉ giữ các điểm có tác động cao, tránh diễn giải dài.';
+    return 'Phân tích cân bằng: đủ căn cứ, thực tế, tập trung vào quản trị và hành động.';
+  }
+
+  function finalAnalysisPrompt(reportText){return `Bạn là HUYỀN — trợ lý đại diện Ban Giám đốc trong cuộc họp quản trị. Phân tích báo cáo tiếng Việt dưới đây.\n\n${analysisDepthInstruction()}\n\nNGUYÊN TẮC BẮT BUỘC:\n1. Không bịa số liệu, khách hàng, nguyên nhân, deadline hay kết quả.\n2. Phân biệt DỮ KIỆN, NHẬN ĐỊNH và ĐỀ XUẤT.\n3. Nếu thiếu KPI/chứng từ/kỳ so sánh thì nói rõ thiếu, không tự kết luận đạt hay không đạt.\n4. Chỉ ra điểm bất cập trong báo cáo: mục tiêu không rõ, số liệu thiếu căn cứ, việc chưa hoàn tất, chưa có phản hồi, thiếu người phụ trách/deadline, rủi ro công nợ, tồn kho, giao hàng, hồ sơ/chứng từ, phối hợp liên phòng ban hoặc vi phạm/thiếu SOP nếu có căn cứ.\n5. Huyền là trợ lý quản trị thân cận của Ban Giám đốc, đang ngồi trong cuộc họp cùng Chú Triết — Giám đốc. Cách nói phải tự nhiên như đang trao đổi trực tiếp: ấm áp, điềm tĩnh, có kinh nghiệm, thẳng vào vấn đề nhưng không lên lớp hay công kích cá nhân. Chỉ dùng “Chú Triết” ở mở đầu hoặc khi cần chuyển ý quan trọng, không lặp liên tục.\n6. Không viết lời nhận xét theo kiểu công văn cứng. Ưu tiên các câu nói tự nhiên như “điểm này Huyền muốn lưu ý thêm”, “ở góc độ vận hành”, “phần này mình cần chốt lại”, “Huyền đề nghị mình làm rõ...”. Giữ sự chuyên nghiệp và vai trò trợ lý BGĐ.\n7. Góp ý riêng cho Kinh doanh, Kế toán, Kho vận và SOP/Quy trình. Nếu báo cáo không có dữ kiện liên quan một bộ phận, ghi rõ chưa đủ dữ kiện thay vì bịa.\n8. Kịch bản trình bày phải tự nhiên như họp thật, giữ đúng số liệu và tên riêng, có thể chèn <short pause>.\n9. Hành động phải cụ thể; owner/deadline chỉ điền khi có căn cứ, nếu không ghi “Cần xác định”.\n10. Thông tin hoạt động công ty chỉ là BỐI CẢNH ĐỊNH HƯỚNG để góp ý phù hợp. Không được biến nó thành doanh số, kết quả, sự kiện hoặc bằng chứng của kỳ báo cáo nếu báo cáo không xác nhận. Nếu báo cáo mâu thuẫn với quy định/thông tin nền của công ty, chỉ rõ điểm lệch và đề xuất cách xử lý.\n11. ${employeeAddressInstruction()} Xưng hô tự nhiên, không lặp tên người báo cáo quá nhiều.\n\nBỐI CẢNH:\n${reportContextText()}\n\nBÁO CÁO GỐC:\n${reportText}\n\nChỉ trả JSON hợp lệ, không markdown:\n{"report_type":"...","executive_summary":"...","meeting_script":"...","huyen_commentary":"lời Huyền trao đổi tự nhiên như trợ lý BGĐ đang nói trực tiếp trong cuộc họp với Chú Triết và người báo cáo; có câu chuyển ý mềm, không văn phong công văn","issues":[{"issue":"...","evidence":"...","impact":"...","priority":"Cao/Trung bình/Thấp"}],"actions":[{"action":"...","reason":"...","owner_suggestion":"... hoặc Cần xác định","deadline_suggestion":"... hoặc Cần xác định","priority":"Cao/Trung bình/Thấp"}],"questions":["..."],"missing_information":["..."],"department_guidance":{"Kinh doanh":["..."],"Kế toán":["..."],"Kho vận":["..."],"SOP / Quy trình":["..."]}}`;}
+
+  async function analyzeLongReport(report){
+    const chunks=splitReportForAnalysis(report,9000);
+    if(chunks.length===1){setStatus($('reportStatus'),'Huyền đang phân tích báo cáo bằng IDECO Phân tích...','busy');return await kieChatJson(finalAnalysisPrompt(report),'Huyền phân tích báo cáo');}
+    const partials=[];
+    for(let i=0;i<chunks.length;i++){
+      setStatus($('reportStatus'),`Báo cáo dài: Huyền đang đọc phần ${i+1}/${chunks.length}...`,'busy');
+      const p=`Bạn là Huyền, trợ lý quản trị của BGĐ và Chú Triết — Giám đốc. Đây là PHẦN ${i+1}/${chunks.length} của một báo cáo dài. Chỉ phân tích nội dung phần này, không suy diễn phần chưa thấy. ${employeeAddressInstruction()}\nBỐI CẢNH:\n${reportContextText()}\n\nNỘI DUNG PHẦN:\n${chunks[i]}\n\nTrả JSON hợp lệ, không markdown: {"meeting_script":"kịch bản nói trung thành cho riêng phần này","facts":["dữ kiện quan trọng"],"completed_work":["việc/kết quả đã làm"],"pending_work":["việc chưa xong/chưa xác nhận"],"issues":[{"issue":"...","evidence":"..."}],"risks":["..."],"questions":["..."]}`;
+      partials.push(await kieChatJson(p,`IDECO phân tích phần ${i+1}`));
+    }
+    setStatus($('reportStatus'),`Đã đọc ${chunks.length} phần. Huyền đang tổng hợp góc nhìn BGĐ...`,'busy');
+    const compressed=partials.map((p,i)=>({part:i+1,facts:p.facts||[],completed_work:p.completed_work||[],pending_work:p.pending_work||[],issues:p.issues||[],risks:p.risks||[],questions:p.questions||[]}));
+    const synth=`Bạn là HUYỀN — trợ lý quản trị thân cận của BGĐ và Chú Triết — Giám đốc. Hãy tổng hợp các kết quả phân tích từng phần của một báo cáo dài thành nhận xét điều hành thống nhất, tự nhiên như đang trao đổi trực tiếp trong cuộc họp. Không thêm dữ kiện ngoài dữ liệu cung cấp. ${employeeAddressInstruction()} ${analysisDepthInstruction()}\nBỐI CẢNH:\n${reportContextText()}\n\nDỮ LIỆU ĐÃ TRÍCH TỪ CÁC PHẦN:\n${JSON.stringify(compressed)}\n\nYêu cầu: chỉ ra bất cập, việc cần khắc phục, hành động; góp ý Kinh doanh/Kế toán/Kho vận/SOP. Trả JSON hợp lệ, không markdown: {"report_type":"...","executive_summary":"...","huyen_commentary":"lời trao đổi rất tự nhiên của Huyền như trợ lý BGĐ với Chú Triết và người báo cáo; có mở ý, chuyển ý, nhận xét và đề nghị hoàn thiện như hội thoại thật, không đọc kiểu công văn","issues":[{"issue":"...","evidence":"...","impact":"...","priority":"Cao/Trung bình/Thấp"}],"actions":[{"action":"...","reason":"...","owner_suggestion":"... hoặc Cần xác định","deadline_suggestion":"... hoặc Cần xác định","priority":"Cao/Trung bình/Thấp"}],"questions":["..."],"missing_information":["..."],"department_guidance":{"Kinh doanh":["..."],"Kế toán":["..."],"Kho vận":["..."],"SOP / Quy trình":["..."]}}`;
+    const final=await kieChatJson(synth,'IDECO tổng hợp báo cáo dài');
+    final.meeting_script=partials.map(p=>p.meeting_script||'').filter(Boolean).join('\n\n<short pause>\n\n');
+    return final;
+  }
+
+  $('analyzeReportBtn').onclick=async()=>{
+    const report=$('reportText').value.trim();if(!report){setStatus($('reportStatus'),'Hãy thêm nội dung vào khung “Nội dung báo cáo” trước. Có thể dùng nút Chuẩn hóa → Thêm vào nội dung báo cáo.','err');return}
+    try{
+      $('analyzeReportBtn').disabled=true;setReportButtons(false);clearAllSectionAudios();
+      const parsed=await analyzeLongReport(report);reportAnalysisData=parsed;
+      $('reportScript').value=enforceEmployeeAddress(parsed.meeting_script||'');
+      $('reportCommentary').value=enforceEmployeeAddress(parsed.huyen_commentary||parsed.executive_summary||'');
+      $('reportIssues').value=enforceEmployeeAddress(toIssueText(parsed.issues));
+      $('reportActions').value=enforceEmployeeAddress(toActionText(parsed.actions));
+      let q=enforceEmployeeAddress(toQuestionText(parsed.questions));if(Array.isArray(parsed.missing_information)&&parsed.missing_information.length)q+='\n\nTHÔNG TIN CÒN THIẾU ĐỂ ĐÁNH GIÁ CHÍNH XÁC:\n'+parsed.missing_information.map((x,i)=>`${i+1}. ${x}`).join('\n');$('reportQuestions').value=q;
+      $('reportDepartments').value=enforceEmployeeAddress(toDepartmentText(parsed.department_guidance));setReportButtons(true);
+      setStatus($('reportStatus'),`IDECO đã phân tích xong • Nhận diện: ${parsed.report_type||'Báo cáo quản trị'}. Có thể chỉnh tay từng tab rồi tạo giọng riêng cho từng mục.`,'ok');
+    }catch(e){setStatus($('reportStatus'),e.message,'err')}finally{$('analyzeReportBtn').disabled=false}
+  };
+
+  $('useReportScriptBtn').onclick=()=>{const v=$('reportScript').value.trim();if(!v)return;$('reportText').value=v;updateReportCount();refreshReportAudio1Button();$('reportText').scrollIntoView({behavior:'smooth',block:'center'});setStatus($('reportStatus'),'Đã dùng kịch bản trình bày làm Nội dung báo cáo. Audio 1 sẽ đọc nội dung này bằng IDECO Giọng báo cáo.','ok')};
+  $('copyActiveReportBtn').onclick=async()=>{const v=activeReportTextarea()?.value||'';if(!v)return;try{await navigator.clipboard.writeText(v);setStatus($('reportStatus'),'Đã sao chép nội dung tab đang xem.','ok')}catch(e){setStatus($('reportStatus'),'Không sao chép tự động được; hãy chọn văn bản và sao chép thủ công.','err')}};
+
+  function currentRegionLabel(){return (typeof REGION_LABEL!=='undefined'&&REGION_LABEL[$('region')?.value])?REGION_LABEL[$('region').value]:'Tiếng Việt tự nhiên';}
+  function reportPresenterStyle(){return `Vietnamese business meeting presentation. Speak naturally like an experienced employee presenting a real report to management. Accent/region preference: ${currentRegionLabel()}. Clear KPI, money, dates, customer and product names. Calm confidence, measured pace, natural pauses, no announcer voice, no robotic cadence.`;}
+  function huyenRegionLabel(){const k=$('huyenRegion')?.value||'south';return REGION_LABEL[k]||'Miền Nam';}
+  function huyenBgdStyle(){const k=$('huyenRegion')?.value||'south';const accent=REGION_STYLE[k]||REGION_STYLE.south;return `Vietnamese executive meeting conversation. You are Huyền, a warm, capable female executive assistant sitting in a real management meeting with Chú Triết, the Director, and the reporting employee. Use ${accent}. Keep this regional identity consistently from beginning to end. Speak like a real human colleague: natural breathing, small conversational pauses, gentle transitions, thoughtful emphasis, and occasional warm softness. Do NOT sound like a newsreader, announcer, lecturer, legal document, or robotic TTS. Do not over-act. When pointing out shortcomings, sound constructive and practical, not accusatory. When suggesting actions, sound clear and decisive. Treat punctuation and bullet lists as spoken ideas rather than reading symbols mechanically. Address “Chú Triết” naturally only at the opening or an important transition, not repeatedly. For the reporting employee, follow this Vietnamese address rule exactly: ${employeeAddressInstruction()} Do not improvise another form of address.`;}
+
+  function huyenAnalysisAudioText(){
+    const c=enforceEmployeeAddress($('reportCommentary').value.trim()),i=enforceEmployeeAddress($('reportIssues').value.trim()),d=enforceEmployeeAddress($('reportDepartments').value.trim()),a=enforceEmployeeAddress($('reportActions').value.trim()),q=enforceEmployeeAddress($('reportQuestions').value.trim());
+    const welcome='Dạ, Huyền xin phép trao đổi với Chú Triết và các anh chị một chút về báo cáo này nhé. Huyền xin đại diện Ban Giám đốc chia sẻ một số nhận xét, với mục tiêu là cùng nhìn rõ những điểm đang làm tốt, những chỗ còn vướng và những việc mình cần hoàn thiện để công việc hiệu quả hơn. Huyền sẽ đi lần lượt từng phần cho dễ theo dõi.';
+    return [c?`${welcome} <short pause> ${c}`:'',i?`<short pause> Bây giờ Huyền đi vào những điểm cần mình lưu ý kỹ hơn nhé. Có vài vấn đề mình nên làm rõ và xử lý sớm. <short pause> ${i}`:'',d?`<short pause> Ở góc độ phối hợp giữa các bộ phận, Huyền xin góp ý thêm để mọi người làm việc ăn khớp hơn. <short pause> ${d}`:'',a?`<short pause> Từ những điểm vừa trao đổi, Huyền đề nghị mình chốt lại một số việc cần làm tiếp theo, càng cụ thể càng dễ theo dõi kết quả. <short pause> ${a}`:'',q?`<short pause> Trước khi kết thúc, Huyền có vài câu muốn mình làm rõ thêm để Chú Triết và Ban Giám đốc có đủ thông tin ra quyết định. <short pause> ${q}`:''].filter(Boolean).join('\n\n');
+  }
+
+  function revokeUrl(u){if(u)try{URL.revokeObjectURL(u)}catch(e){}}
+  function reportSectionInfo(key){return REPORT_SECTIONS.find(x=>x.key===key);}
+  function sectionSpeechText(key,text){
+    const intro={
+      script:'Sau đây là phần trình bày báo cáo. <short pause>',
+      commentary:'Dạ, Huyền xin phép trao đổi với Chú Triết và các anh chị một chút về báo cáo này nhé. Huyền xin đại diện Ban Giám đốc chia sẻ một số nhận xét, với mục tiêu là cùng nhìn rõ điều đang làm tốt, chỗ còn vướng và việc cần hoàn thiện để công việc hiệu quả hơn. <short pause>',
+      issues:'Bây giờ Huyền đi vào những điểm cần mình lưu ý kỹ hơn nhé. Có vài vấn đề nếu không làm rõ sớm thì sẽ ảnh hưởng đến việc theo dõi và điều hành. <short pause>',
+      actions:'Từ những điểm vừa nêu, Huyền đề nghị mình chốt lại một số việc cần làm tiếp theo, theo hướng cụ thể và dễ kiểm soát kết quả. <short pause>',
+      questions:'Trước khi kết thúc, Huyền có vài câu muốn mình làm rõ thêm trong cuộc họp để Chú Triết và Ban Giám đốc có đủ thông tin ra quyết định. <short pause>',
+      departments:'Ở góc độ phối hợp giữa các bộ phận, Huyền xin góp ý thêm một số điểm để Kinh doanh, Kế toán, Kho vận và phần SOP làm việc ăn khớp hơn. <short pause>'
+    };
+    return enforceEmployeeAddress(`${intro[key]||''} ${text}`.trim());
+  }
+  function updateMergeAllButton(){
+    const count=(reportPart1Blob?1:0)+REPORT_SECTIONS.filter(x=>reportSectionBlobs[x.key]).length;
+    if($('mergeAllReportAudioBtn')) $('mergeAllReportAudioBtn').disabled=count<2;
+    if($('stopReportAudioBtn')) $('stopReportAudioBtn').disabled=count<1;
+  }
+  function clearSectionAudio(key){
+    if(reportSectionUrls[key])revokeUrl(reportSectionUrls[key]);delete reportSectionUrls[key];delete reportSectionBlobs[key];
+    const a=$(`sectionAudio_${key}`);if(a){a.pause();a.removeAttribute('src');a.load();}
+    const d=document.querySelector(`.report-section-download-btn[data-section="${key}"]`);if(d)d.disabled=true;
+    const del=document.querySelector(`.report-section-delete-btn[data-section="${key}"]`);if(del)del.disabled=true;
+    if(typeof clearMergedReportAudio==='function' && reportMergedBlob) clearMergedReportAudio();
+    updateMergeAllButton();
+  }
+  function clearAllSectionAudios(){REPORT_SECTIONS.forEach(x=>clearSectionAudio(x.key));}
+
+  function clearReportPart1Audio(){
+    if(reportPart1Url)revokeUrl(reportPart1Url);reportPart1Url=null;reportPart1Blob=null;
+    const a=$('reportPart1Audio');if(a){a.pause();a.removeAttribute('src');a.load();}
+    if($('downloadReportPart1Btn'))$('downloadReportPart1Btn').disabled=true;if($('deleteReportPart1Btn'))$('deleteReportPart1Btn').disabled=true;if(typeof clearMergedReportAudio==='function' && reportMergedBlob) clearMergedReportAudio();updateMergeAllButton();
+  }
+
+  function clearMergedReportAudio(){
+    if(reportMergedUrl)revokeUrl(reportMergedUrl);reportMergedUrl=null;reportMergedBlob=null;
+    const a=$('reportMergedAudio');if(a){a.pause();a.removeAttribute('src');a.load();}
+    if($('downloadMergedReportBtn'))$('downloadMergedReportBtn').disabled=true;
+    if($('deleteMergedReportBtn'))$('deleteMergedReportBtn').disabled=true;
+  }
+
+  async function createPart1(play=true){
+    const text=$('reportText').value.trim();if(!text)throw new Error('Chưa có Nội dung báo cáo để tạo audio.');
+    reportPart1Blob=await kieTtsText(text,reportPresenterStyle(),'Đang tạo Audio — Báo cáo');revokeUrl(reportPart1Url);reportPart1Url=URL.createObjectURL(reportPart1Blob);$('reportPart1Audio').src=reportPart1Url;$('downloadReportPart1Btn').disabled=false;if($('deleteReportPart1Btn'))$('deleteReportPart1Btn').disabled=false;if(play)$('reportPart1Audio').play().catch(()=>{});setStatus($('reportTtsStatus'),'Đã tạo Audio báo cáo bằng IDECO Giọng báo cáo.','ok');updateMergeAllButton();return reportPart1Blob;
+  }
+
+  async function createSectionAudio(key,play=true){
+    const info=reportSectionInfo(key);if(!info)throw new Error('Không xác định được mục cần tạo giọng.');
+    const text=$(info.textarea)?.value.trim()||'';if(!text)throw new Error(`Mục “${info.label}” chưa có nội dung.`);
+    const style=key==='script'?reportPresenterStyle():huyenBgdStyle();
+    const blob=await kieTtsText(sectionSpeechText(key,text),style,`Đang tạo giọng — ${info.label}`);
+    if(reportSectionUrls[key])revokeUrl(reportSectionUrls[key]);
+    reportSectionBlobs[key]=blob;reportSectionUrls[key]=URL.createObjectURL(blob);
+    const a=$(`sectionAudio_${key}`);if(a)a.src=reportSectionUrls[key];
+    const d=document.querySelector(`.report-section-download-btn[data-section="${key}"]`);if(d)d.disabled=false;
+    const del=document.querySelector(`.report-section-delete-btn[data-section="${key}"]`);if(del)del.disabled=false;
+    if(play&&a)a.play().catch(()=>{});
+    if(reportMergedBlob) clearMergedReportAudio();
+    setStatus($('reportTtsStatus'),`Đã tạo file giọng riêng cho “${info.label}” • Huyền: ${huyenRegionLabel()}.`,'ok');updateMergeAllButton();return blob;
+  }
+
+  async function createAllHuyenSections(){
+    const keys=['commentary','issues','actions','questions','departments'];
+    // Chụp lại toàn bộ nội dung trước khi chạy để không phụ thuộc tab đang mở.
+    const jobs=keys.map(key=>{
+      const info=reportSectionInfo(key);
+      return {key,info,text:$(info?.textarea)?.value.trim()||''};
+    }).filter(x=>x.info&&x.text);
+    if(!jobs.length) throw new Error('Chưa có nội dung phân tích để tạo giọng. Hãy bấm “Huyền phân tích báo cáo” trước.');
+    if(reportMergedBlob) clearMergedReportAudio();
+
+    const ok=[], failed=[];
+    for(let i=0;i<jobs.length;i++){
+      const job=jobs[i];
+      setStatus($('reportTtsStatus'),`Đang tạo toàn bộ Huyền/BGĐ • ${i+1}/${jobs.length}: ${job.info.label}...`,'busy');
+      let done=false,lastErr=null;
+      for(let attempt=1;attempt<=2&&!done;attempt++){
+        try{
+          // Dùng đúng nội dung đã snapshot, không đọc lại tab active.
+          const style=huyenBgdStyle();
+          const blob=await kieTtsText(sectionSpeechText(job.key,job.text),style,`Đang tạo giọng — ${job.info.label}`);
+          if(reportSectionUrls[job.key])revokeUrl(reportSectionUrls[job.key]);
+          reportSectionBlobs[job.key]=blob;reportSectionUrls[job.key]=URL.createObjectURL(blob);
+          const a=$(`sectionAudio_${job.key}`);if(a)a.src=reportSectionUrls[job.key];
+          const d=document.querySelector(`.report-section-download-btn[data-section="${job.key}"]`);if(d)d.disabled=false;
+          const del=document.querySelector(`.report-section-delete-btn[data-section="${job.key}"]`);if(del)del.disabled=false;
+          ok.push(job.info.label);done=true;updateMergeAllButton();
+        }catch(e){lastErr=e;if(attempt<2){setStatus($('reportTtsStatus'),`Mục “${job.info.label}” chưa tạo được, IDECO đang thử lại lần 2...`,'busy');await sleep(1200);}}
+      }
+      if(!done) failed.push(`${job.info.label}: ${lastErr?.message||'lỗi không xác định'}`);
+      // Nghỉ nhẹ giữa các tác vụ để tránh dồn request liên tiếp.
+      if(i<jobs.length-1) await sleep(500);
+    }
+    updateMergeAllButton();
+    if(!ok.length) throw new Error('Chưa tạo được file Huyền/BGĐ nào. '+failed.join(' | '));
+    const msg=`Đã tạo ${ok.length}/${jobs.length} file Huyền/BGĐ • giọng ${huyenRegionLabel()}.`+(failed.length?` Mục chưa tạo được: ${failed.join(' | ')}`:' Tất cả nội dung đã được tạo audio đầy đủ.');
+    setStatus($('reportTtsStatus'),msg,failed.length?'busy':'ok');
+  }
+
+  async function mergeAllGeneratedAudio(play=true){
+    const blobs=[];const labels=[];
+    if(reportPart1Blob){blobs.push(reportPart1Blob);labels.push('Báo cáo');}
+    REPORT_SECTIONS.forEach(x=>{if(reportSectionBlobs[x.key]){blobs.push(reportSectionBlobs[x.key]);labels.push(x.label);}});
+    if(blobs.length<2)throw new Error('Cần tạo ít nhất 2 file audio trước khi ghép.');
+    setStatus($('reportTtsStatus'),`Đang ghép ${blobs.length} file đã tạo theo đúng thứ tự...`,'busy');
+    reportMergedBlob=await mergeAudioBlobsToWav(blobs,650);revokeUrl(reportMergedUrl);reportMergedUrl=URL.createObjectURL(reportMergedBlob);$('reportMergedAudio').src=reportMergedUrl;$('downloadMergedReportBtn').disabled=false;if($('deleteMergedReportBtn'))$('deleteMergedReportBtn').disabled=false;if(play)$('reportMergedAudio').play().catch(()=>{});
+    setStatus($('reportTtsStatus'),`Đã ghép ${blobs.length} file: ${labels.join(' → ')}.`,'ok');updateMergeAllButton();return reportMergedBlob;
+  }
+
+  document.querySelectorAll('.report-section-audio-btn').forEach(btn=>btn.onclick=async()=>{const key=btn.dataset.section;try{btn.disabled=true;await createSectionAudio(key,true)}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{btn.disabled=false}});
+  document.querySelectorAll('.report-section-download-btn').forEach(btn=>btn.onclick=()=>{const key=btn.dataset.section,info=reportSectionInfo(key),url=reportSectionUrls[key];if(!url)return;downloadBlobUrl(url,`IDECO_${(info?.label||key).replace(/[^\p{L}\p{N}]+/gu,'_')}_${new Date().toISOString().replace(/[:.]/g,'-')}.wav`)});
+  document.querySelectorAll('.report-section-delete-btn').forEach(btn=>btn.onclick=()=>{const key=btn.dataset.section,info=reportSectionInfo(key);clearSectionAudio(key);setStatus($('reportTtsStatus'),`Đã xóa audio “${info?.label||key}” khỏi bộ nhớ tạm của trình duyệt.`,'ok');});
+  REPORT_SECTIONS.forEach(info=>{$(info.textarea)?.addEventListener('input',()=>clearSectionAudio(info.key));});
+
+  $('createReportPart1Btn').onclick=async()=>{try{$('createReportPart1Btn').disabled=true;await createPart1(true)}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{$('createReportPart1Btn').disabled=false;updateMergeAllButton()}};
+  if($('deleteReportPart1Btn')) $('deleteReportPart1Btn').onclick=()=>{clearReportPart1Audio();setStatus($('reportTtsStatus'),'Đã xóa Audio báo cáo khỏi bộ nhớ tạm của trình duyệt.','ok');};
+  $('createAllAnalysisAudioBtn').onclick=async()=>{try{$('createAllAnalysisAudioBtn').disabled=true;await createAllHuyenSections()}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{$('createAllAnalysisAudioBtn').disabled=false;updateMergeAllButton()}};
+  $('mergeAllReportAudioBtn').onclick=async()=>{try{$('mergeAllReportAudioBtn').disabled=true;await mergeAllGeneratedAudio(true)}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{updateMergeAllButton()}};
+  if($('deleteMergedReportBtn')) $('deleteMergedReportBtn').onclick=()=>{clearMergedReportAudio();setStatus($('reportTtsStatus'),'Đã xóa file cuộc họp đã ghép khỏi bộ nhớ tạm của trình duyệt.','ok');};
+  $('stopReportAudioBtn').onclick=()=>{['reportPart1Audio','reportMergedAudio',...REPORT_SECTIONS.map(x=>`sectionAudio_${x.key}`)].forEach(id=>{try{$(id)?.pause();if($(id))$(id).currentTime=0}catch(e){}})};
+  function downloadBlobUrl(url,name){if(!url)return;const a=document.createElement('a');a.href=url;a.download=name;a.click();}
+  $('downloadReportPart1Btn').onclick=()=>downloadBlobUrl(reportPart1Url,`IDECO_BAO_CAO_${new Date().toISOString().replace(/[:.]/g,'-')}.wav`);
+  $('downloadMergedReportBtn').onclick=()=>downloadBlobUrl(reportMergedUrl,`IDECO_CUOC_HOP_HUYEN_${new Date().toISOString().replace(/[:.]/g,'-')}.wav`);
+
+  $('ttsBtn').onclick=async()=>{
+    const txt=$('text').value.trim();
+    if(!txt){setStatus($('ttsStatus'),'Hãy nhập nội dung cần đọc trước.','err');return}
+    try{
+      $('ttsBtn').disabled=true;
+      const requestedVoice=$('voice').value||'Kore';
+      const model=$('ttsModel')?.value || 'gemini-3.8-flash-tts';
+      const resolved=await resolveVoiceForRegion(requestedVoice);
+      const voice=resolved.voice;
+      const style=buildSpeechStyle(voice);
+      const mode=$('stabilityMode').value;
+      const chunkSize=parseInt($('chunkSize').value,10)||3000;
+      const useChunks=mode==='chunk' || (mode==='auto' && txt.length>6000);
+      const chunks=useChunks?splitTextForTTS(txt,chunkSize):[txt];
+
+      setStatus($('ttsStatus'),`IDECO Giọng đọc đang tạo ${chunks.length>1?chunks.length+' đoạn':'giọng'} • ${REGION_LABEL[$('region').value]} • ${resolved.autoRegional?'🔒 Giọng vùng đã khóa':'Giọng'} ${voice}...`,'busy');
+
+      const results=[]; const usedKeys=[];
+      for(let i=0;i<chunks.length;i++){
+        setStatus($('ttsStatus'),`Đang tạo đoạn ${i+1}/${chunks.length} • ${REGION_LABEL[$('region').value]} • ${resolved.autoRegional?'🔒 Voice vùng':'Voice'} ${voice}...`,'busy');
+        const r=await generateTTSChunk(chunks[i],voice,style,i+1,chunks.length);
+        results.push(r); usedKeys.push(r.keyIndex+1);
+      }
+
+      if(results.length===1){
+        const r=results[0];
+        const parsed=parseWavPCM(r.bytes);
+        if(parsed) wavBlob=new Blob([r.bytes],{type:'audio/wav'});
+        else if(/l16|pcm/i.test(r.mimeType)) wavBlob=pcm16ToWav(r.bytes,24000,1);
+        else wavBlob=new Blob([r.bytes],{type:r.mimeType||'audio/wav'});
+      }else{
+        const parsed=results.map(r=>parseWavPCM(r.bytes));
+        if(parsed.every(Boolean)){
+          const sr=parsed[0].sampleRate, ch=parsed[0].channels;
+          if(!parsed.every(x=>x.sampleRate===sr&&x.channels===ch)) throw new Error('Các đoạn audio có sample rate/channel khác nhau, chưa thể ghép an toàn.');
+          wavBlob=pcm16ToWav(concatPCM(parsed.map(x=>x.pcm),90,sr,ch),sr,ch);
+        }else if(results.every(r=>/l16|pcm/i.test(r.mimeType))){
+          wavBlob=pcm16ToWav(concatPCM(results.map(r=>r.bytes),90,24000,1),24000,1);
+        }else{
+          throw new Error('Hệ thống trả audio nén theo từng đoạn nên chưa thể ghép trực tiếp. Hãy chọn “Một lượt” hoặc giảm nội dung.');
+        }
+      }
+
+      if(objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl=URL.createObjectURL(wavBlob);
+      $('audio').src=objectUrl;$('downloadBtn').disabled=false;
+      const keys=[...new Set(usedKeys)].map(x=>'0'+x).join(', ');
+      setStatus($('ttsStatus'),`Đã tạo thành công • IDECO Giọng đọc • ${REGION_LABEL[$('region').value]} • ${resolved.autoRegional?'🔒 Đã khóa giọng vùng miền':'Giọng'} ${voice}.`, 'ok');
+      $('audio').play().catch(()=>{});
+    }catch(e){setStatus($('ttsStatus'),e.message,'err')}
+    finally{$('ttsBtn').disabled=false}
+  };
+
+  $('audio').addEventListener('play',()=> $('wave').classList.add('playing'));
+  $('audio').addEventListener('pause',()=> $('wave').classList.remove('playing'));
+  $('audio').addEventListener('ended',()=> $('wave').classList.remove('playing'));
+  $('downloadBtn').onclick=()=>{
+    if(!wavBlob)return;
+    const a=document.createElement('a'); a.href=objectUrl; a.download=`IDECO_AI_Voice_${new Date().toISOString().replace(/[:.]/g,'-')}.wav`; a.click();
+  };
+
+  applyRememberedAppLogin();
+  loadLocal(); renderVoices(); updateCount();renderCompanyKnowledge();
+  if($('huyenRegion'))$('huyenRegion').addEventListener('change',()=>{['commentary','issues','actions','questions','departments'].forEach(clearSectionAudio);try{saveLocal()}catch(e){}setStatus($('reportTtsStatus'),`Đã đổi Huyền sang giọng ${huyenRegionLabel()}. Hãy tạo lại các mục Huyền/BGĐ nếu cần.`,'ok')});
+  if($('kieReportVoice'))$('kieReportVoice').addEventListener('change',()=>{clearReportPart1Audio();clearAllSectionAudios();try{saveLocal()}catch(e){}setStatus($('reportTtsStatus'),'Đã đổi âm sắc. Các file audio cũ đã được bỏ khỏi danh sách ghép để tránh trộn giọng.','ok')}); updateNormalizeCounts(); updateNormalizeSavings(); updateReportCount(); refreshReportAudio1Button();
+
+  // Try auto-sync only if a Firebase URL was already saved on this device.
+  setTimeout(async()=>{
+    if(FIREBASE_DATABASE_URL){
+      try{await firebaseRead(true)}catch(e){}
+    }
+  },400);
+})();
+</script>
+</body>
+</html>
