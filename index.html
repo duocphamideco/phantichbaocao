@@ -674,11 +674,12 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
       <textarea id="companyInfoContent" placeholder="Nhập nội dung hoạt động công ty hoặc bấm micro để nói thành văn bản..."></textarea>
       <div class="toolbar">
         <button class="btn btn-good" id="companyMicBtn">🎙 Nói → Văn bản</button>
-        <button class="btn btn-soft" id="companyMicStopBtn" disabled>⏹ Dừng & chép lời</button>
+        <button class="btn btn-soft" id="companyMicStopBtn" disabled>⏹ Dừng</button>
+        <button class="btn btn-soft" id="companyNormalizeBtn">✨ AI chuẩn hóa thông tin</button>
         <button class="btn btn-primary" id="addCompanyInfoBtn">➕ Thêm thông tin</button>
         <button class="btn btn-danger" id="clearCompanyDraftBtn">Xóa nội dung đang nhập</button>
       </div>
-      <div id="companyInfoStatus" class="status">Thông tin sau khi thêm sẽ được lưu cùng cấu hình Firebase để các máy khác dùng khi Huyền phân tích.</div>
+      <div id="companyInfoStatus" class="status">Có thể nói trực tiếp để văn bản xuất hiện theo thời gian thực. Trước khi lưu, bấm “AI chuẩn hóa thông tin” để sửa chính tả, từ nhận sai và diễn đạt lại rõ hơn theo ngữ cảnh nghiệp vụ.</div>
       <div id="companyInfoList" class="company-list"></div>
     </div>
 
@@ -760,6 +761,8 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
   let activeKieTasks = new Set();
   let companyKnowledge = [];
   let companyRecorder = null, companyStream = null, companyChunks = [];
+  let companySpeechRecognition = null, companySpeechActive = false, companySpeechManualStop = false;
+  let companySpeechBaseText = '', companySpeechFinalByIndex = new Map();
   let contextFieldRecorder = null, contextFieldStream = null, contextFieldChunks = [], contextFieldActive = null;
   const reportSectionBlobs = {};
   const reportSectionUrls = {};
@@ -1507,27 +1510,150 @@ ${txt}`;
   async function transcribeCompanyAudio(blob){
     if(!blob||!blob.size)throw new Error('Không có dữ liệu ghi âm.');
     const b64=await fileToBase64(blob),mime=blob.type||'audio/webm',model=$('rewriteModel').value.trim()||'gemini-3.8-flash';
-    const {data}=await geminiFetchWithFailover(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,key=>({method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:'Chép chính xác lời nói tiếng Việt thành văn bản để lưu làm thông tin hoạt động công ty. Giữ nguyên tên riêng, số liệu, quy trình, chính sách và thuật ngữ. Chỉ trả văn bản đã chép.'},{inlineData:{mimeType:mime,data:b64}}]}],generationConfig:{temperature:0.1}})}),'IDECO chép lời thông tin công ty');
+    const title=$('companyInfoTitle')?.value.trim()||'';
+    const {data}=await geminiFetchWithFailover(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,key=>({method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:`Chép chính xác lời nói tiếng Việt thành văn bản dùng làm thông tin hoạt động công ty IDECO.${title?` Bối cảnh tiêu đề: ${title}.`:''}\nƯu tiên nhận đúng thuật ngữ doanh nghiệp, dược phẩm, kinh doanh, kế toán, kho vận, SOP/quy trình.\nGiữ nguyên tên riêng, tên khách hàng, tên sản phẩm, số liệu, tiền, tỷ lệ, ngày tháng, mã hàng, quy trình, chính sách nếu nghe được.\nKhông tự thêm ý hoặc số liệu. Chỉ trả văn bản đã chép.`},{inlineData:{mimeType:mime,data:b64}}]}],generationConfig:{temperature:0.05}})}),'IDECO chép lời thông tin công ty');
     const out=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();if(!out)throw new Error('IDECO chưa trả về bản chép lời.');return out;
   }
+
+  function appendCompanySpeechText(finalText,interimText=''){
+    const field=$('companyInfoContent'); if(!field)return;
+    const parts=[];
+    if(companySpeechBaseText.trim()) parts.push(companySpeechBaseText.trim());
+    if(finalText.trim()) parts.push(finalText.trim());
+    let value=parts.join(parts.length>1?'\n':'');
+    if(interimText.trim()) value+=(value?' ':'')+interimText.trim();
+    field.value=value;
+    field.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+
+  function buildCompanyFinalSpeech(){
+    return [...companySpeechFinalByIndex.entries()].sort((a,b)=>a[0]-b[0]).map(x=>x[1]).join(' ').replace(/\s+/g,' ').trim();
+  }
+
+  function startCompanyBrowserSpeech(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR) return false;
+    companySpeechBaseText=$('companyInfoContent').value.trim();
+    companySpeechFinalByIndex=new Map();
+    companySpeechManualStop=false;
+    companySpeechActive=true;
+    const recognition=new SR();
+    companySpeechRecognition=recognition;
+    recognition.lang='vi-VN';
+    recognition.continuous=true;
+    recognition.interimResults=true;
+    recognition.maxAlternatives=1;
+    recognition.onresult=e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const txt=(e.results[i][0]?.transcript||'').trim();
+        if(!txt)continue;
+        if(e.results[i].isFinal) companySpeechFinalByIndex.set(i,txt);
+        else interim+=(interim?' ':'')+txt;
+      }
+      appendCompanySpeechText(buildCompanyFinalSpeech(),interim);
+      setStatus($('companyInfoStatus'),`🎙 Đang nghe trực tiếp... ${interim?'Đang nhận: '+interim:'Anh cứ nói tự nhiên, văn bản sẽ cập nhật liên tục.'}`,'busy');
+    };
+    recognition.onerror=e=>{
+      const code=e?.error||'unknown';
+      if(code==='no-speech') return;
+      companySpeechActive=false;
+      $('companyMicBtn').disabled=false;$('companyMicStopBtn').disabled=true;
+      setStatus($('companyInfoStatus'),`Micro trực tiếp gặp lỗi (${code}). Anh có thể bấm lại; hệ thống sẽ dùng chế độ ghi âm dự phòng nếu trình duyệt không hỗ trợ.`,'err');
+    };
+    recognition.onend=()=>{
+      if(companySpeechActive&&!companySpeechManualStop){
+        try{recognition.start();return}catch(e){}
+      }
+      companySpeechActive=false;
+      $('companyMicBtn').disabled=false;$('companyMicStopBtn').disabled=true;
+      const finalText=buildCompanyFinalSpeech();
+      appendCompanySpeechText(finalText,'');
+      if(companySpeechManualStop) setStatus($('companyInfoStatus'),'Đã nhận giọng nói thành văn bản. Nên bấm “AI chuẩn hóa thông tin” trước khi lưu để sửa lỗi nghe sai/chính tả.','ok');
+    };
+    recognition.start();
+    $('companyMicBtn').disabled=true;$('companyMicStopBtn').disabled=false;
+    setStatus($('companyInfoStatus'),'🎙 Đang nghe trực tiếp... Anh nói tự nhiên, văn bản sẽ hiện ngay.','busy');
+    return true;
+  }
+
+  async function startCompanyRecorderFallback(){
+    if(!navigator.mediaDevices?.getUserMedia||!window.isSecureContext) throw new Error('Micro cần chạy trên HTTPS và được trình duyệt cấp quyền.');
+    companyStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});companyChunks=[];
+    const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported?.(t));companyRecorder=new MediaRecorder(companyStream,preferred?{mimeType:preferred}:undefined);
+    companyRecorder.ondataavailable=e=>{if(e.data?.size)companyChunks.push(e.data)};
+    companyRecorder.onerror=e=>{setStatus($('companyInfoStatus'),'Ghi âm gặp lỗi: '+(e?.error?.message||'không xác định'),'err')};
+    companyRecorder.onstop=async()=>{
+      try{
+        const blob=new Blob(companyChunks,{type:companyRecorder.mimeType||'audio/webm'});
+        companyStream?.getTracks().forEach(t=>t.stop());
+        $('companyMicBtn').disabled=false;$('companyMicStopBtn').disabled=true;
+        setStatus($('companyInfoStatus'),'Đang nhận diện lời nói...','busy');
+        const out=await transcribeCompanyAudio(blob);
+        const cur=$('companyInfoContent').value.trim();$('companyInfoContent').value=(cur?cur+'\n':'')+out;
+        setStatus($('companyInfoStatus'),'Đã chép lời. Nên bấm “AI chuẩn hóa thông tin” trước khi lưu.','ok');
+      }catch(e){setStatus($('companyInfoStatus'),e.message,'err')}
+      finally{companyRecorder=null;companyStream=null;companyChunks=[];}
+    };
+    companyRecorder.start(1000);
+    $('companyMicBtn').disabled=true;$('companyMicStopBtn').disabled=false;
+    setStatus($('companyInfoStatus'),'🎙 Đang ghi âm... Bấm Dừng khi nói xong.','busy');
+  }
+
   if($('companyMicBtn')) $('companyMicBtn').onclick=async()=>{
     try{
-      if(!navigator.mediaDevices?.getUserMedia||!window.isSecureContext)throw new Error('Micro cần chạy trên HTTPS và được trình duyệt cấp quyền.');
-      companyStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});companyChunks=[];
-      const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported?.(t));companyRecorder=new MediaRecorder(companyStream,preferred?{mimeType:preferred}:undefined);
-      companyRecorder.ondataavailable=e=>{if(e.data?.size)companyChunks.push(e.data)};
-      companyRecorder.onstop=async()=>{try{const blob=new Blob(companyChunks,{type:companyRecorder.mimeType||'audio/webm'});companyStream?.getTracks().forEach(t=>t.stop());$('companyMicBtn').disabled=false;$('companyMicStopBtn').disabled=true;setStatus($('companyInfoStatus'),'Đang chuyển lời nói thành văn bản...','busy');const out=await transcribeCompanyAudio(blob);const cur=$('companyInfoContent').value.trim();$('companyInfoContent').value=(cur?cur+'\n':'')+out;setStatus($('companyInfoStatus'),'Đã chép lời. Kiểm tra nội dung rồi bấm “Thêm thông tin”.','ok')}catch(e){setStatus($('companyInfoStatus'),e.message,'err')}};
-      companyRecorder.start(500);$('companyMicBtn').disabled=true;$('companyMicStopBtn').disabled=false;setStatus($('companyInfoStatus'),'🎙 Đang ghi âm thông tin công ty...','busy');
+      if(companySpeechActive||companyRecorder?.state==='recording') return;
+      if(startCompanyBrowserSpeech()) return;
+      await startCompanyRecorderFallback();
     }catch(e){setStatus($('companyInfoStatus'),e.message,'err')}
   };
-  if($('companyMicStopBtn')) $('companyMicStopBtn').onclick=()=>{try{if(companyRecorder?.state==='recording')companyRecorder.stop()}catch(e){setStatus($('companyInfoStatus'),e.message,'err')}};
-  if($('clearCompanyDraftBtn')) $('clearCompanyDraftBtn').onclick=()=>{$('companyInfoTitle').value='';$('companyInfoContent').value='';setStatus($('companyInfoStatus'),'Đã xóa nội dung đang nhập.','ok')};
+
+  if($('companyMicStopBtn')) $('companyMicStopBtn').onclick=()=>{
+    try{
+      if(companySpeechActive&&companySpeechRecognition){
+        companySpeechManualStop=true;companySpeechActive=false;
+        setStatus($('companyInfoStatus'),'Đang kết thúc nhận giọng nói...','busy');
+        companySpeechRecognition.stop();
+        return;
+      }
+      if(companyRecorder?.state==='recording'){
+        setStatus($('companyInfoStatus'),'Đang kết thúc ghi âm...','busy');
+        companyRecorder.stop();
+      }
+    }catch(e){setStatus($('companyInfoStatus'),e.message,'err')}
+  };
+
+  async function normalizeCompanyDraft(){
+    const title=$('companyInfoTitle').value.trim();
+    const raw=$('companyInfoContent').value.trim();
+    if(!raw){setStatus($('companyInfoStatus'),'Hãy nhập hoặc nói nội dung công ty trước khi chuẩn hóa.','err');return;}
+    const btn=$('companyNormalizeBtn');
+    try{
+      btn.disabled=true;
+      setStatus($('companyInfoStatus'),'IDECO đang hiểu ngữ cảnh và chuẩn hóa văn bản...','busy');
+      const existingTitles=(companyKnowledge||[]).slice(-12).map(x=>x.title).filter(Boolean).join(' • ');
+      const prompt=`Bạn là biên tập viên dữ liệu nội bộ IDECO, am hiểu ngữ cảnh doanh nghiệp, dược phẩm, bán hàng, kế toán, kho vận và SOP/quy trình. Hãy chuẩn hóa nội dung người dùng vừa nhập hoặc đọc bằng giọng nói để dùng làm THÔNG TIN NỀN cho Huyền phân tích báo cáo nhân viên.\n\nTIÊU ĐỀ HIỆN TẠI: ${title||'Chưa đặt tiêu đề'}\n${existingTitles?`MỘT SỐ CHỦ ĐỀ ĐÃ CÓ TRONG KHO THÔNG TIN: ${existingTitles}\n`:''}\nYÊU CẦU:\n1. Sửa chính tả tiếng Việt, dấu câu, viết hoa, lỗi gõ và lỗi nhận dạng giọng nói.\n2. Được phép suy đoán TỪ NGỮ đúng theo ngữ cảnh khi có độ tin cậy cao (ví dụ thuật ngữ nghiệp vụ, tên quy trình, SOP, công nợ, giao nhận, khách hàng, sản phẩm).\n3. Viết lại câu rõ ràng, mạch lạc, chuyên nghiệp và dễ hiểu hơn; có thể tách đoạn/gạch ý nếu nội dung dài hoặc liệt kê nhiều quy định.\n4. Loại từ đệm, câu nói lặp và lỗi nói vấp, nhưng KHÔNG làm mất ý nghiệp vụ.\n5. Giữ nguyên mọi dữ kiện có tính xác định: tên người/khách hàng/sản phẩm, số tiền, số lượng, tỷ lệ, ngày tháng, mã hàng, KPI, thời hạn và chính sách.\n6. Không tự bịa chính sách, mục tiêu, số liệu hoặc quy định chưa có trong văn bản. Nếu một từ quá mơ hồ và không thể suy ra chắc chắn, giữ nguyên hoặc diễn đạt trung tính, không tự sáng tác.\n7. Chỉ trả về NỘI DUNG ĐÃ CHUẨN HÓA, không giải thích, không tiêu đề phụ kiểu “Bản chuẩn hóa”.\n\nVĂN BẢN GỐC:\n${raw}`;
+      const {text:out}=await kieChatRaw(prompt,'IDECO chuẩn hóa thông tin công ty');
+      const cleaned=(out||'').trim();
+      if(!cleaned) throw new Error('IDECO chưa trả về nội dung chuẩn hóa.');
+      $('companyInfoContent').value=cleaned;
+      $('companyInfoContent').dispatchEvent(new Event('input',{bubbles:true}));
+      setStatus($('companyInfoStatus'),'Đã chuẩn hóa thông minh. Anh kiểm tra lại nội dung, sau đó bấm “Thêm thông tin” để lưu cho Huyền sử dụng.','ok');
+    }catch(e){setStatus($('companyInfoStatus'),e.message,'err')}
+    finally{btn.disabled=false;}
+  }
+
+  if($('companyNormalizeBtn')) $('companyNormalizeBtn').onclick=normalizeCompanyDraft;
+  if($('clearCompanyDraftBtn')) $('clearCompanyDraftBtn').onclick=()=>{
+    try{if(companySpeechActive&&companySpeechRecognition){companySpeechManualStop=true;companySpeechActive=false;companySpeechRecognition.stop();}}catch(e){}
+    try{if(companyRecorder?.state==='recording')companyRecorder.stop();}catch(e){}
+    $('companyInfoTitle').value='';$('companyInfoContent').value='';setStatus($('companyInfoStatus'),'Đã xóa nội dung đang nhập.','ok');
+  };
   if($('addCompanyInfoBtn')) $('addCompanyInfoBtn').onclick=async()=>{
     const title=$('companyInfoTitle').value.trim(),content=$('companyInfoContent').value.trim();if(!title&&!content){setStatus($('companyInfoStatus'),'Hãy nhập tiêu đề hoặc nội dung trước.','err');return;}
     const id=(globalThis.crypto?.randomUUID?.()||('info_'+Date.now()));companyKnowledge.push({id,title:title||'Thông tin công ty',content,updatedAt:new Date().toISOString()});renderCompanyKnowledge();saveLocal();$('companyInfoTitle').value='';$('companyInfoContent').value='';
     try{await firebaseWrite();setStatus($('companyInfoStatus'),'Đã thêm thông tin và đồng bộ Firebase. Huyền sẽ dùng làm bối cảnh khi phân tích báo cáo.','ok')}catch(e){setStatus($('companyInfoStatus'),'Đã lưu trên máy này nhưng chưa đồng bộ Firebase: '+e.message,'err')}
   };
-
 
   // ===== NHẬP NHANH KPI / ĐỊNH HƯỚNG: MICRO + CHUẨN HÓA AI =====
   const CONTEXT_FIELD_CONFIG = {
