@@ -328,7 +328,7 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
         <label>Ổn định giọng khi nội dung dài</label>
         <select id="stabilityMode">
           <option value="auto" selected>Tự động — khuyên dùng</option>
-          <option value="single">Một lượt — giữ nguyên TTS 3.8</option>
+          <option value="single">Một lượt — giữ nguyên một luồng giọng</option>
           <option value="chunk">Chia đoạn & ghép WAV</option>
         </select>
       </div>
@@ -405,7 +405,7 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
         <button class="btn btn-good" id="useNormalizedReportBtn" disabled>➕ Thêm vào nội dung báo cáo</button>
         <button class="btn btn-soft" id="clearNormalizeBtn">🧹 Xóa khu chuẩn hóa</button>
       </div>
-      <div id="normalizeStatus" class="status">Mẹo tiết kiệm credit: chuẩn hóa trước → chỉ đưa phần trọng tâm sang TTS → Huyền phân tích trên chính bản đã chuẩn hóa.</div>
+      <div id="normalizeStatus" class="status">Mẹo tiết kiệm credit: chuẩn hóa trước → chỉ đưa phần trọng tâm sang giọng đọc → Huyền phân tích trên chính bản đã chuẩn hóa.</div>
     </div>
 
     <div class="flow-arrow">↓ Bản đã chuẩn hóa được đưa xuống khung đọc báo cáo ↓</div>
@@ -454,11 +454,11 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
     <div class="report-grid two">
       <div><label>Âm sắc giọng Huyền</label>
         <select id="kieReportVoice">
-          <option value="Kore" selected>Kore — chắc chắn, phù hợp họp</option>
-          <option value="Gacrux">Gacrux — trưởng thành</option>
-          <option value="Sulafat">Sulafat — ấm áp</option>
-          <option value="Zephyr">Zephyr — sáng, rõ</option>
-          <option value="Aoede">Aoede — nhẹ, tự nhiên</option>
+          <option value="Kore" selected>Huyền 01 — chắc chắn, phù hợp họp</option>
+          <option value="Gacrux">Huyền 02 — trưởng thành</option>
+          <option value="Sulafat">Huyền 03 — ấm áp</option>
+          <option value="Zephyr">Huyền 04 — sáng, rõ</option>
+          <option value="Aoede">Huyền 05 — nhẹ, tự nhiên</option>
         </select>
       </div>
       <div><label>Độ dài phân tích báo cáo</label>
@@ -482,7 +482,7 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
           <option value="phuyen">Phú Yên</option>
         </select>
       </div>
-      <div class="huyen-region-note"><b>Huyền mặc định giọng nữ miền Nam.</b><br>Vùng giọng này chỉ áp dụng cho phần Huyền/BGĐ và các tab phân tích; không làm thay đổi giọng đọc thông báo thường.</div>
+      <div class="huyen-region-note"><b>Huyền mặc định giọng nữ miền Nam.</b><br>Khi chọn Miền Nam, hệ thống dùng chế độ khóa vùng giọng và giảm độ ngẫu nhiên để hạn chế tối đa việc tự chuyển sang giọng Bắc giữa các mục. Vùng giọng này chỉ áp dụng cho Huyền/BGĐ và các tab phân tích; không làm thay đổi giọng đọc thông báo thường.</div>
     </div>
 
     <div class="report-kpi-note"><b>Nguyên tắc phân tích:</b> Không tự bịa số liệu. Huyền phải tách <b>Dữ kiện → Nhận định → Vấn đề → Hành động</b>; chỉ ra điểm bất cập của báo cáo và đưa góp ý theo góc nhìn BGĐ cho <b>Kinh doanh, Kế toán, Kho vận và SOP/Quy trình</b> khi nội dung có liên quan.</div>
@@ -571,7 +571,7 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
       </div>
     </div>
 
-    <div class="department-note"><b>Cách tạo giọng:</b> Mỗi tab có thể tạo, nghe, tải và <b>xóa audio riêng</b>. Nút <b>“Tạo toàn bộ phần Huyền/BGĐ”</b> sẽ lần lượt tạo đủ Nhận xét → Vấn đề → Hành động → Câu hỏi → Góp ý bộ phận, không phụ thuộc tab đang mở. Sau đó bấm <b>“Ghép tất cả file đã tạo”</b> để xuất một file cuộc họp thống nhất.</div>
+    <div class="department-note"><b>Cách tạo giọng:</b> Mỗi tab có thể tạo, nghe, tải và <b>xóa audio riêng</b>. Nút <b>“Tạo toàn bộ phần Huyền/BGĐ”</b> sẽ tạo tuần tự đủ 5 mục, tự kiểm tra mục nào chưa có audio và tự thử đồng bộ lại trước khi kết thúc. Không phụ thuộc tab đang mở. Sau đó bấm <b>“Ghép tất cả file đã tạo”</b> để xuất một file cuộc họp thống nhất.</div>
     <div class="report-actions">
       <button class="btn btn-soft" id="createReportPart1Btn" disabled>🎙 Tạo Audio — Báo cáo</button>
       <button class="btn btn-primary" id="createAllAnalysisAudioBtn" disabled>👩‍💼 Tạo toàn bộ phần Huyền/BGĐ</button>
@@ -654,6 +654,7 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
     <div class="keyrow"><input type="password" id="geminiKey3" autocomplete="off" placeholder="Nhập API key 03"><button class="btn btn-soft keyToggle" data-target="geminiKey3">👁 Hiện</button></div>
     <div class="small" id="keyInfo">Chưa nạp API giọng đọc.</div>
 
+    <!-- Tên model chỉ dùng nội bộ, không hiển thị cho người dùng -->
     <div style="display:none"><input id="rewriteModel" value="gemini-3.8-flash"><input id="ttsModel" value="gemini-3.8-flash-tts" readonly></div>
 
     <hr>
@@ -661,6 +662,7 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
     <p class="small">Cấu hình này dùng để chuẩn hóa, phân tích báo cáo và tạo Audio 1/Audio 2 cho cuộc họp.</p>
     <label>API phân tích báo cáo</label>
     <div class="keyrow"><input type="password" id="kieApiKey" autocomplete="off" placeholder="Nhập API phân tích"><button class="btn btn-soft keyToggle" data-target="kieApiKey">👁 Hiện</button></div>
+    <!-- Tên model báo cáo chỉ dùng nội bộ, không hiển thị cho người dùng -->
     <div style="display:none"><input id="kieAnalysisModel" value="gemini-3-8-flash" readonly><input id="kieReportTtsModel" value="google/gemini-3-8-flash-tts" readonly></div>
     <div class="toolbar"><button class="btn btn-soft" id="testKieBtn">🧪 Kiểm tra API phân tích</button></div>
 
@@ -764,6 +766,7 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
   let companySpeechRecognition = null, companySpeechActive = false, companySpeechManualStop = false;
   let companySpeechBaseText = '', companySpeechFinalByIndex = new Map();
   let contextFieldRecorder = null, contextFieldStream = null, contextFieldChunks = [], contextFieldActive = null;
+  let reportBatchAudioBusy = false;
   const reportSectionBlobs = {};
   const reportSectionUrls = {};
   const REPORT_SECTIONS = [
@@ -1059,34 +1062,86 @@ ${combined}`;
     return walk(r)||walk(data?.data)||'';
   }
 
-  async function kieCreateTtsSingle(text,style,onProgress){
+  async function kieCreateTtsSingle(text,style,onProgress,options={}){
     const key=await ensureKieKey();
-    const voice=$('kieReportVoice')?.value||'Kore';
+    const voice=options.voice||$('kieReportVoice')?.value||'Kore';
     const model=$('kieReportTtsModel')?.value||'google/gemini-3-8-flash-tts';
-    const create=await fetch(KIE_TASK_CREATE,{method:'POST',headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,input:{temperature:0.72,speakers:[{speaker_id:'Speaker 1',voice_name:voice}],dialogue_turns:[{speaker_id:'Speaker 1',style,text}]}})});
-    let created={};try{created=await create.json()}catch(e){}
-    if(!create.ok||!created?.data?.taskId) throw new Error(created?.msg||created?.message||`IDECO Voice không tạo được tác vụ (${create.status}).`);
+    // Huyền/BGĐ cần độ ổn định cao hơn: hạ temperature để hạn chế trôi âm sắc/vùng miền giữa các file.
+    const temperature=Number.isFinite(options.temperature)?options.temperature:0.32;
+    const input={
+      temperature,
+      speakers:[{speaker_id:'Speaker 1',voice_name:voice}],
+      filler_words:false,
+      dialogue_turns:[{speaker_id:'Speaker 1',style,text}]
+    };
+
+    let create=null, created={}, createErr=null;
+    for(let n=1;n<=3;n++){
+      try{
+        create=await fetch(KIE_TASK_CREATE,{method:'POST',headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,input})});
+        try{created=await create.json()}catch(e){created={}}
+        if(create.ok&&created?.data?.taskId) break;
+        createErr=new Error(created?.msg||created?.message||`IDECO Voice không tạo được tác vụ (${create.status}).`);
+        if(![408,409,425,429,500,502,503,504].includes(create.status)) break;
+      }catch(e){createErr=e}
+      if(n<3) await sleep(900*n);
+    }
+    if(!create?.ok||!created?.data?.taskId) throw (createErr||new Error('IDECO Voice không tạo được tác vụ.'));
+
     const taskId=created.data.taskId;activeKieTasks.add(taskId);
-    for(let attempt=0;attempt<80;attempt++){
+    let transientErrors=0;
+    for(let attempt=0;attempt<100;attempt++){
       if(onProgress) onProgress(attempt);
-      await sleep(attempt<10?1800:2600);
-      const q=await fetch(`${KIE_TASK_INFO}?taskId=${encodeURIComponent(taskId)}`,{headers:{'Authorization':`Bearer ${key}`}});
-      let info={};try{info=await q.json()}catch(e){}
-      if(!q.ok) throw new Error(info?.msg||`Không đọc được trạng thái IDECO Voice (${q.status}).`);
-      const state=String(info?.data?.state||'').toLowerCase();
-      if(state==='success'){
+      await sleep(attempt<10?1700:2400);
+
+      let q=null, info={};
+      try{
+        q=await fetch(`${KIE_TASK_INFO}?taskId=${encodeURIComponent(taskId)}`,{headers:{'Authorization':`Bearer ${key}`}});
+        try{info=await q.json()}catch(e){info={}}
+      }catch(e){
+        transientErrors++;
+        if(transientErrors<=8) continue;
         activeKieTasks.delete(taskId);
-        const url=extractKieResultUrl(info); if(!url) throw new Error('Hệ thống báo hoàn tất nhưng chưa trả URL âm thanh.');
-        const ar=await fetch(url); if(!ar.ok) throw new Error(`Không tải được audio (${ar.status}).`);
-        return await ar.blob();
+        throw new Error(`Mất kết nối khi kiểm tra audio: ${e.message||e}`);
+      }
+
+      if(!q.ok){
+        if([408,409,425,429,500,502,503,504].includes(q.status) && transientErrors<8){transientErrors++;continue;}
+        activeKieTasks.delete(taskId);
+        throw new Error(info?.msg||`Không đọc được trạng thái IDECO Voice (${q.status}).`);
+      }
+      transientErrors=0;
+      const state=String(info?.data?.state||'').toLowerCase();
+
+      if(state==='success'){
+        const url=extractKieResultUrl(info);
+        // Có lúc task báo success trước khi URL audio xuất hiện: tiếp tục poll thay vì làm hỏng cả chuỗi.
+        if(!url){
+          if(attempt<99) continue;
+          activeKieTasks.delete(taskId);
+          throw new Error('Hệ thống báo hoàn tất nhưng chưa trả URL âm thanh.');
+        }
+        let audioRes=null,lastAudioErr=null;
+        for(let n=1;n<=4;n++){
+          try{
+            audioRes=await fetch(url,{cache:'no-store'});
+            if(audioRes.ok) break;
+            lastAudioErr=new Error(`Không tải được audio (${audioRes.status}).`);
+          }catch(e){lastAudioErr=e}
+          if(n<4) await sleep(700*n);
+        }
+        activeKieTasks.delete(taskId);
+        if(!audioRes?.ok) throw (lastAudioErr||new Error('Không tải được audio.'));
+        return await audioRes.blob();
       }
       if(state==='fail'||state==='failed'){
-        activeKieTasks.delete(taskId); throw new Error(info?.data?.failMsg||'IDECO Voice tạo audio thất bại.');
+        activeKieTasks.delete(taskId);
+        throw new Error(info?.data?.failMsg||'IDECO Voice tạo audio thất bại.');
       }
     }
-    activeKieTasks.delete(taskId); throw new Error('IDECO Voice mất quá nhiều thời gian. Hãy thử lại.');
+    activeKieTasks.delete(taskId);
+    throw new Error('IDECO Voice mất quá nhiều thời gian. Hãy thử lại.');
   }
-
   function splitForKieTts(text,maxChars=3200){return splitTextForTTS(String(text||''),maxChars);}
 
   async function blobToPcm24k(blob){
@@ -1107,15 +1162,27 @@ ${combined}`;
     return pcm16ToWav(concatPCM(parts,silenceMs,24000,1),24000,1);
   }
 
-  async function kieTtsText(text,style,statusPrefix='Đang tạo audio'){
-    const chunks=splitForKieTts(text,3200),blobs=[];
+  async function kieTtsText(text,style,statusPrefix='Đang tạo audio',options={}){
+    // Chia ngắn hơn cho phần Huyền để giảm lỗi task và hạn chế giọng trôi giữa đoạn dài.
+    const maxChars=options.maxChars||2600;
+    const chunks=splitForKieTts(text,maxChars),blobs=[];
     for(let i=0;i<chunks.length;i++){
-      setStatus($('reportTtsStatus'),`${statusPrefix} • đoạn ${i+1}/${chunks.length} • IDECO Giọng báo cáo...`,'busy');
-      blobs.push(await kieCreateTtsSingle(chunks[i],style));
+      let chunkBlob=null,lastErr=null;
+      for(let attempt=1;attempt<=3&&!chunkBlob;attempt++){
+        setStatus($('reportTtsStatus'),`${statusPrefix} • đoạn ${i+1}/${chunks.length}${attempt>1?` • thử lại ${attempt}/3`:''}...`,'busy');
+        try{
+          chunkBlob=await kieCreateTtsSingle(chunks[i],style,null,options);
+        }catch(e){
+          lastErr=e;
+          if(attempt<3) await sleep(1200*attempt);
+        }
+      }
+      if(!chunkBlob) throw (lastErr||new Error(`Không tạo được đoạn ${i+1}/${chunks.length}.`));
+      blobs.push(chunkBlob);
+      if(i<chunks.length-1) await sleep(450);
     }
     return blobs.length===1?blobs[0]:await mergeAudioBlobsToWav(blobs,180);
   }
-
   function renderVoices(){
     const filter=$('gender').value;
     const selected=$('voice').value;
@@ -2088,7 +2155,14 @@ ${raw}`;
   function currentRegionLabel(){return (typeof REGION_LABEL!=='undefined'&&REGION_LABEL[$('region')?.value])?REGION_LABEL[$('region').value]:'Tiếng Việt tự nhiên';}
   function reportPresenterStyle(){return `Vietnamese business meeting presentation. Speak naturally like an experienced employee presenting a real report to management. Accent/region preference: ${currentRegionLabel()}. Clear KPI, money, dates, customer and product names. Calm confidence, measured pace, natural pauses, no announcer voice, no robotic cadence.`;}
   function huyenRegionLabel(){const k=$('huyenRegion')?.value||'south';return REGION_LABEL[k]||'Miền Nam';}
-  function huyenBgdStyle(){const k=$('huyenRegion')?.value||'south';const accent=REGION_STYLE[k]||REGION_STYLE.south;return `Vietnamese executive meeting conversation. You are Huyền, a warm, capable female executive assistant sitting in a real management meeting with Chú Triết, the Director, and the reporting employee. Use ${accent}. Keep this regional identity consistently from beginning to end. Speak like a real human colleague: natural breathing, small conversational pauses, gentle transitions, thoughtful emphasis, and occasional warm softness. Do NOT sound like a newsreader, announcer, lecturer, legal document, or robotic TTS. Do not over-act. When pointing out shortcomings, sound constructive and practical, not accusatory. When suggesting actions, sound clear and decisive. Treat punctuation and bullet lists as spoken ideas rather than reading symbols mechanically. Address “Chú Triết” naturally only at the opening or an important transition, not repeatedly. For the reporting employee, follow this Vietnamese address rule exactly: ${employeeAddressInstruction()} Do not improvise another form of address.`;}
+  function huyenBgdStyle(){
+    const k=$('huyenRegion')?.value||'south';
+    const accent=REGION_STYLE[k]||REGION_STYLE.south;
+    const hardLock=k==='south'
+      ? 'KHÓA GIỌNG BẮT BUỘC: nữ người Việt miền Nam, chất giọng Nam Bộ/Sài Gòn tự nhiên. Phát âm, nhịp câu và ngữ điệu phải giữ miền Nam từ câu đầu đến câu cuối. TUYỆT ĐỐI không chuyển sang giọng Hà Nội/miền Bắc ở giữa đoạn, kể cả khi đọc nội dung trang trọng, số liệu, danh sách hay câu hỏi. Nếu có nhiều đoạn, mọi đoạn phải nghe như CÙNG MỘT người nữ miền Nam đang nói liên tục trong cùng cuộc họp.'
+      : `KHÓA VÙNG GIỌNG BẮT BUỘC: ${accent}. Giữ đúng một vùng giọng xuyên suốt, không tự đổi vùng giữa các câu hoặc các đoạn.`;
+    return `${hardLock} Vietnamese executive meeting conversation. You are Huyền, a warm, capable female executive assistant sitting in a real management meeting with Chú Triết, the Director, and the reporting employee. Use ${accent}. Keep the same female vocal identity, age impression, pronunciation pattern, speaking energy and regional cadence from beginning to end. Speak like a real human colleague: natural breathing, small conversational pauses, gentle transitions, thoughtful emphasis, and occasional warm softness. Do NOT sound like a newsreader, announcer, lecturer, legal document, or robotic TTS. Do not over-act. When pointing out shortcomings, sound constructive and practical, not accusatory. When suggesting actions, sound clear and decisive. Treat punctuation and bullet lists as spoken ideas rather than reading symbols mechanically. Address “Chú Triết” naturally only at the opening or an important transition, not repeatedly. For the reporting employee, follow this Vietnamese address rule exactly: ${employeeAddressInstruction()} Do not improvise another form of address.`;
+  }
 
   function huyenAnalysisAudioText(){
     const c=enforceEmployeeAddress($('reportCommentary').value.trim()),i=enforceEmployeeAddress($('reportIssues').value.trim()),d=enforceEmployeeAddress($('reportDepartments').value.trim()),a=enforceEmployeeAddress($('reportActions').value.trim()),q=enforceEmployeeAddress($('reportQuestions').value.trim());
@@ -2146,7 +2220,8 @@ ${raw}`;
     const info=reportSectionInfo(key);if(!info)throw new Error('Không xác định được mục cần tạo giọng.');
     const text=$(info.textarea)?.value.trim()||'';if(!text)throw new Error(`Mục “${info.label}” chưa có nội dung.`);
     const style=key==='script'?reportPresenterStyle():huyenBgdStyle();
-    const blob=await kieTtsText(sectionSpeechText(key,text),style,`Đang tạo giọng — ${info.label}`);
+    const ttsOptions=key==='script'?{temperature:0.42,maxChars:3000}:{temperature:0.18,maxChars:2400};
+    const blob=await kieTtsText(sectionSpeechText(key,text),style,`Đang tạo giọng — ${info.label}`,ttsOptions);
     if(reportSectionUrls[key])revokeUrl(reportSectionUrls[key]);
     reportSectionBlobs[key]=blob;reportSectionUrls[key]=URL.createObjectURL(blob);
     const a=$(`sectionAudio_${key}`);if(a)a.src=reportSectionUrls[key];
@@ -2157,44 +2232,101 @@ ${raw}`;
     setStatus($('reportTtsStatus'),`Đã tạo file giọng riêng cho “${info.label}” • Huyền: ${huyenRegionLabel()}.`,'ok');updateMergeAllButton();return blob;
   }
 
+  function setHuyenAudioControlsBusy(busy){
+    reportBatchAudioBusy=busy;
+    if($('createAllAnalysisAudioBtn')) $('createAllAnalysisAudioBtn').disabled=busy;
+    document.querySelectorAll('.report-section-audio-btn').forEach(b=>b.disabled=busy);
+    if($('analyzeReportBtn')) $('analyzeReportBtn').disabled=busy;
+  }
+
   async function createAllHuyenSections(){
+    if(reportBatchAudioBusy) return;
     const keys=['commentary','issues','actions','questions','departments'];
-    // Chụp lại toàn bộ nội dung trước khi chạy để không phụ thuộc tab đang mở.
+    // Chụp đủ 5 nội dung trước khi chạy; không phụ thuộc tab đang mở.
     const jobs=keys.map(key=>{
       const info=reportSectionInfo(key);
       return {key,info,text:$(info?.textarea)?.value.trim()||''};
-    }).filter(x=>x.info&&x.text);
-    if(!jobs.length) throw new Error('Chưa có nội dung phân tích để tạo giọng. Hãy bấm “Huyền phân tích báo cáo” trước.');
+    });
+    const missingText=jobs.filter(x=>!x.info||!x.text).map(x=>x.info?.label||x.key);
+    if(missingText.length) throw new Error(`Chưa đủ nội dung để tạo toàn bộ Huyền/BGĐ: ${missingText.join(', ')}. Hãy phân tích lại báo cáo hoặc kiểm tra tab bị trống.`);
     if(reportMergedBlob) clearMergedReportAudio();
 
-    const ok=[], failed=[];
-    for(let i=0;i<jobs.length;i++){
-      const job=jobs[i];
-      setStatus($('reportTtsStatus'),`Đang tạo toàn bộ Huyền/BGĐ • ${i+1}/${jobs.length}: ${job.info.label}...`,'busy');
-      let done=false,lastErr=null;
-      for(let attempt=1;attempt<=2&&!done;attempt++){
+    setHuyenAudioControlsBusy(true);
+    const failures=new Map();
+    try{
+      // Vòng 1: tạo tuần tự đủ 5 mục, giãn request để tránh queue/rate-limit.
+      for(let i=0;i<jobs.length;i++){
+        const job=jobs[i];
+        setStatus($('reportTtsStatus'),`Đang tạo Huyền/BGĐ • ${i+1}/5: ${job.info.label}...`,'busy');
         try{
-          // Dùng đúng nội dung đã snapshot, không đọc lại tab active.
-          const style=huyenBgdStyle();
-          const blob=await kieTtsText(sectionSpeechText(job.key,job.text),style,`Đang tạo giọng — ${job.info.label}`);
+          const blob=await kieTtsText(
+            sectionSpeechText(job.key,job.text),
+            huyenBgdStyle(),
+            `Đang tạo giọng — ${job.info.label}`,
+            {temperature:0.18,maxChars:2400}
+          );
           if(reportSectionUrls[job.key])revokeUrl(reportSectionUrls[job.key]);
-          reportSectionBlobs[job.key]=blob;reportSectionUrls[job.key]=URL.createObjectURL(blob);
-          const a=$(`sectionAudio_${job.key}`);if(a)a.src=reportSectionUrls[job.key];
+          reportSectionBlobs[job.key]=blob;
+          reportSectionUrls[job.key]=URL.createObjectURL(blob);
+          const a=$(`sectionAudio_${job.key}`);if(a){a.src=reportSectionUrls[job.key];a.load();}
           const d=document.querySelector(`.report-section-download-btn[data-section="${job.key}"]`);if(d)d.disabled=false;
           const del=document.querySelector(`.report-section-delete-btn[data-section="${job.key}"]`);if(del)del.disabled=false;
-          ok.push(job.info.label);done=true;updateMergeAllButton();
-        }catch(e){lastErr=e;if(attempt<2){setStatus($('reportTtsStatus'),`Mục “${job.info.label}” chưa tạo được, IDECO đang thử lại lần 2...`,'busy');await sleep(1200);}}
+          failures.delete(job.key);
+          updateMergeAllButton();
+        }catch(e){
+          failures.set(job.key,e);
+        }
+        if(i<jobs.length-1) await sleep(1400);
       }
-      if(!done) failed.push(`${job.info.label}: ${lastErr?.message||'lỗi không xác định'}`);
-      // Nghỉ nhẹ giữa các tác vụ để tránh dồn request liên tiếp.
-      if(i<jobs.length-1) await sleep(500);
-    }
-    updateMergeAllButton();
-    if(!ok.length) throw new Error('Chưa tạo được file Huyền/BGĐ nào. '+failed.join(' | '));
-    const msg=`Đã tạo ${ok.length}/${jobs.length} file Huyền/BGĐ • giọng ${huyenRegionLabel()}.`+(failed.length?` Mục chưa tạo được: ${failed.join(' | ')}`:' Tất cả nội dung đã được tạo audio đầy đủ.');
-    setStatus($('reportTtsStatus'),msg,failed.length?'busy':'ok');
-  }
 
+      // Vòng sửa lỗi: chỉ chạy lại các mục thật sự chưa có blob. Tối đa 2 vòng.
+      for(let repairRound=1;repairRound<=2;repairRound++){
+        const pending=jobs.filter(j=>!reportSectionBlobs[j.key]);
+        if(!pending.length) break;
+        setStatus($('reportTtsStatus'),`Đang đồng bộ lại ${pending.length} mục chưa tạo đủ • vòng ${repairRound}/2...`,'busy');
+        await sleep(2200);
+        for(let i=0;i<pending.length;i++){
+          const job=pending[i];
+          try{
+            const blob=await kieTtsText(
+              sectionSpeechText(job.key,job.text),
+              huyenBgdStyle(),
+              `Đồng bộ lại — ${job.info.label}`,
+              {temperature:0.16,maxChars:2200}
+            );
+            if(reportSectionUrls[job.key])revokeUrl(reportSectionUrls[job.key]);
+            reportSectionBlobs[job.key]=blob;
+            reportSectionUrls[job.key]=URL.createObjectURL(blob);
+            const a=$(`sectionAudio_${job.key}`);if(a){a.src=reportSectionUrls[job.key];a.load();}
+            const d=document.querySelector(`.report-section-download-btn[data-section="${job.key}"]`);if(d)d.disabled=false;
+            const del=document.querySelector(`.report-section-delete-btn[data-section="${job.key}"]`);if(del)del.disabled=false;
+            failures.delete(job.key);
+          }catch(e){failures.set(job.key,e)}
+          if(i<pending.length-1) await sleep(1600);
+        }
+      }
+
+      updateMergeAllButton();
+      const completed=jobs.filter(j=>!!reportSectionBlobs[j.key]);
+      const missing=jobs.filter(j=>!reportSectionBlobs[j.key]);
+      if(missing.length){
+        const detail=missing.map(j=>`${j.info.label}: ${failures.get(j.key)?.message||'chưa nhận được audio'}`).join(' | ');
+        setStatus($('reportTtsStatus'),`Đã tạo ${completed.length}/5 mục Huyền/BGĐ. Hệ thống đã tự thử đồng bộ lại nhưng còn thiếu: ${detail}. Anh có thể bấm “Tạo toàn bộ” thêm một lần hoặc tạo riêng đúng mục còn thiếu.`,'busy');
+      }else{
+        setStatus($('reportTtsStatus'),`Đã tạo đủ 5/5 file Huyền/BGĐ • khóa giọng ${huyenRegionLabel()} • đã kiểm tra đồng bộ từng player.`,'ok');
+      }
+    }finally{
+      setHuyenAudioControlsBusy(false);
+      // Chỉ bật nút từng mục khi đã có nội dung phân tích.
+      document.querySelectorAll('.report-section-audio-btn').forEach(b=>{
+        const info=reportSectionInfo(b.dataset.section);
+        b.disabled=!($(info?.textarea)?.value.trim());
+      });
+      if($('analyzeReportBtn')) $('analyzeReportBtn').disabled=false;
+      if($('createAllAnalysisAudioBtn')) $('createAllAnalysisAudioBtn').disabled=false;
+      updateMergeAllButton();
+    }
+  }
   async function mergeAllGeneratedAudio(play=true){
     const blobs=[];const labels=[];
     if(reportPart1Blob){blobs.push(reportPart1Blob);labels.push('Báo cáo');}
@@ -2205,14 +2337,14 @@ ${raw}`;
     setStatus($('reportTtsStatus'),`Đã ghép ${blobs.length} file: ${labels.join(' → ')}.`,'ok');updateMergeAllButton();return reportMergedBlob;
   }
 
-  document.querySelectorAll('.report-section-audio-btn').forEach(btn=>btn.onclick=async()=>{const key=btn.dataset.section;try{btn.disabled=true;await createSectionAudio(key,true)}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{btn.disabled=false}});
+  document.querySelectorAll('.report-section-audio-btn').forEach(btn=>btn.onclick=async()=>{const key=btn.dataset.section;if(reportBatchAudioBusy)return;try{btn.disabled=true;await createSectionAudio(key,true)}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{btn.disabled=false}});
   document.querySelectorAll('.report-section-download-btn').forEach(btn=>btn.onclick=()=>{const key=btn.dataset.section,info=reportSectionInfo(key),url=reportSectionUrls[key];if(!url)return;downloadBlobUrl(url,`IDECO_${(info?.label||key).replace(/[^\p{L}\p{N}]+/gu,'_')}_${new Date().toISOString().replace(/[:.]/g,'-')}.wav`)});
   document.querySelectorAll('.report-section-delete-btn').forEach(btn=>btn.onclick=()=>{const key=btn.dataset.section,info=reportSectionInfo(key);clearSectionAudio(key);setStatus($('reportTtsStatus'),`Đã xóa audio “${info?.label||key}” khỏi bộ nhớ tạm của trình duyệt.`,'ok');});
   REPORT_SECTIONS.forEach(info=>{$(info.textarea)?.addEventListener('input',()=>clearSectionAudio(info.key));});
 
   $('createReportPart1Btn').onclick=async()=>{try{$('createReportPart1Btn').disabled=true;await createPart1(true)}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{$('createReportPart1Btn').disabled=false;updateMergeAllButton()}};
   if($('deleteReportPart1Btn')) $('deleteReportPart1Btn').onclick=()=>{clearReportPart1Audio();setStatus($('reportTtsStatus'),'Đã xóa Audio báo cáo khỏi bộ nhớ tạm của trình duyệt.','ok');};
-  $('createAllAnalysisAudioBtn').onclick=async()=>{try{$('createAllAnalysisAudioBtn').disabled=true;await createAllHuyenSections()}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{$('createAllAnalysisAudioBtn').disabled=false;updateMergeAllButton()}};
+  $('createAllAnalysisAudioBtn').onclick=async()=>{if(reportBatchAudioBusy)return;try{await createAllHuyenSections()}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{updateMergeAllButton()}};
   $('mergeAllReportAudioBtn').onclick=async()=>{try{$('mergeAllReportAudioBtn').disabled=true;await mergeAllGeneratedAudio(true)}catch(e){setStatus($('reportTtsStatus'),e.message,'err')}finally{updateMergeAllButton()}};
   if($('deleteMergedReportBtn')) $('deleteMergedReportBtn').onclick=()=>{clearMergedReportAudio();setStatus($('reportTtsStatus'),'Đã xóa file cuộc họp đã ghép khỏi bộ nhớ tạm của trình duyệt.','ok');};
   $('stopReportAudioBtn').onclick=()=>{['reportPart1Audio','reportMergedAudio',...REPORT_SECTIONS.map(x=>`sectionAudio_${x.key}`)].forEach(id=>{try{$(id)?.pause();if($(id))$(id).currentTime=0}catch(e){}})};
