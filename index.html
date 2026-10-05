@@ -1,4 +1,6 @@
 <!doctype html>
+<!-- IDECO: AI Agent báo cáo tách riêng từ module Kế hoạch & Báo cáo; giữ nguyên chức năng nội bộ -->
+
 <html lang="vi">
 <head>
 <meta charset="utf-8">
@@ -150,13 +152,13 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
     <textarea id="text" placeholder="Dán thông báo hoặc văn bản thường tại đây. Khung này KHÔNG dùng cho báo cáo dài..."></textarea>
     <div class="count"><span id="charCount">0</span> ký tự</div>
     <div class="toolbar">
-      <button class="btn btn-good" id="micBtn">🎙️ Ghi âm → Văn bản</button>
-      <button class="btn btn-soft" id="stopMicBtn" disabled>⏹ Dừng & chép lời</button>
+      <button class="btn btn-good" id="micBtn">🎙️ Nói trực tiếp → Văn bản</button>
+      <button class="btn btn-soft" id="stopMicBtn" disabled>⏹ Dừng</button>
       <button class="btn btn-soft" id="uploadAudioBtn">📁 Chọn file ghi âm</button>
       <input id="audioFileInput" type="file" accept="audio/*" class="hidden">
       <button class="btn btn-danger" id="clearBtn">Xóa</button>
     </div>
-    <div id="micStatus" class="status">Trên mobile, ứng dụng ưu tiên ghi âm bằng micro rồi dùng IDECO AI để chép lời. Micro trình duyệt cần quyền truy cập và thường cần HTTPS.</div>
+    <div id="micStatus" class="status">Bấm “Nói trực tiếp → Văn bản”: chữ sẽ hiện ngay khi nói trên Chrome/Edge. Nếu trình duyệt không hỗ trợ nhận giọng trực tiếp, hệ thống tự chuyển sang ghi âm dự phòng.</div>
 
     <hr>
     <h2>2. AI soạn lại thông báo thường trước khi đọc</h2>
@@ -681,7 +683,7 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
         <button class="btn btn-primary" id="addCompanyInfoBtn">➕ Thêm thông tin</button>
         <button class="btn btn-danger" id="clearCompanyDraftBtn">Xóa nội dung đang nhập</button>
       </div>
-      <div id="companyInfoStatus" class="status">Có thể nói trực tiếp để văn bản xuất hiện theo thời gian thực. Trước khi lưu, bấm “AI chuẩn hóa thông tin” để sửa chính tả, từ nhận sai và diễn đạt lại rõ hơn theo ngữ cảnh nghiệp vụ.</div>
+      <div id="companyInfoStatus" class="status">Bấm “Nói → Văn bản”: khi mở AI Voice trực tiếp, chữ sẽ hiện liên tục trong lúc nói. Nếu trình duyệt không hỗ trợ nhận giọng trực tiếp, hệ thống tự dùng ghi âm dự phòng. Trước khi lưu, nên bấm “AI chuẩn hóa thông tin”.</div>
       <div id="companyInfoList" class="company-list"></div>
     </div>
 
@@ -764,6 +766,7 @@ details.advanced summary{cursor:pointer;font-weight:850;color:#315477}
   let companyKnowledge = [];
   let companyRecorder = null, companyStream = null, companyChunks = [];
   let companySpeechRecognition = null, companySpeechActive = false, companySpeechManualStop = false;
+  let companyForceRecorder = false;
   let companySpeechBaseText = '', companySpeechFinalByIndex = new Map();
   let contextFieldRecorder = null, contextFieldStream = null, contextFieldChunks = [], contextFieldActive = null;
   let reportBatchAudioBusy = false;
@@ -1582,6 +1585,139 @@ ${txt}`;
     const out=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();if(!out)throw new Error('IDECO chưa trả về bản chép lời.');return out;
   }
 
+  // ===== MICRO TRỰC TIẾP MƯỢT: 1 SESSION DÙNG CHUNG, TỰ NỐI LẠI KHI CHROME NGẮT =====
+  let idecoLiveSpeechSession = null;
+
+  function idecoSpeechClean(s){
+    return String(s||'').replace(/\s+/g,' ').trim();
+  }
+  function idecoSpeechAppendUnique(existing,piece){
+    const a=idecoSpeechClean(existing), b=idecoSpeechClean(piece);
+    if(!b)return a;
+    if(!a)return b;
+    const al=a.toLocaleLowerCase('vi-VN'), bl=b.toLocaleLowerCase('vi-VN');
+    if(al.endsWith(bl))return a;
+    // Chrome đôi khi lặp lại vài từ cuối khi tự restart recognition.
+    const aw=a.split(/\s+/), bw=b.split(/\s+/);
+    let overlap=0, max=Math.min(12,aw.length,bw.length);
+    for(let n=max;n>=1;n--){
+      const x=aw.slice(-n).join(' ').toLocaleLowerCase('vi-VN');
+      const y=bw.slice(0,n).join(' ').toLocaleLowerCase('vi-VN');
+      if(x===y){overlap=n;break;}
+    }
+    return idecoSpeechClean(a+' '+bw.slice(overlap).join(' '));
+  }
+  function idecoSpeechIsEmbedded(){
+    try{return window.self!==window.top}catch(_e){return true}
+  }
+  function idecoSpeechStopCurrentSilently(){
+    const s=idecoLiveSpeechSession;
+    if(!s)return;
+    s.manualStop=true;s.active=false;
+    try{clearTimeout(s.restartTimer)}catch(_e){}
+    try{s.recognition?.abort()}catch(_e){}
+    idecoLiveSpeechSession=null;
+  }
+  function idecoStartLiveSpeech(opts){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR)return false;
+    if(idecoLiveSpeechSession?.active){
+      if(idecoLiveSpeechSession.owner===opts.owner)return true;
+      throw new Error('Micro đang được dùng ở một ô khác. Hãy bấm Dừng ở ô đang nói trước.');
+    }
+    const field=$(opts.fieldId);
+    if(!field)throw new Error('Không tìm thấy ô nhập văn bản.');
+    const state={
+      owner:opts.owner,fieldId:opts.fieldId,active:true,manualStop:false,
+      base:String(field.value||'').trimEnd(),committed:'',interim:'',recognition:null,
+      restartTimer:null,restartCount:0,lastError:'',finished:false
+    };
+    idecoLiveSpeechSession=state;
+    const setButtons=(live)=>{
+      try{if(opts.startBtnId)$(opts.startBtnId).disabled=!!live}catch(_e){}
+      try{if(opts.stopBtnId)$(opts.stopBtnId).disabled=!live}catch(_e){}
+    };
+    const status=(msg,cls='')=>{try{opts.status?.(msg,cls)}catch(_e){}};
+    const render=()=>{
+      const spoken=idecoSpeechClean([state.committed,state.interim].filter(Boolean).join(' '));
+      field.value=state.base+(state.base&&spoken?'\n':'')+spoken;
+      field.dispatchEvent(new Event('input',{bubbles:true}));
+      try{opts.afterUpdate?.()}catch(_e){}
+    };
+    const finish=(msg,cls='ok')=>{
+      if(state.finished)return;
+      state.finished=true;state.active=false;
+      try{clearTimeout(state.restartTimer)}catch(_e){}
+      if(state.interim){state.committed=idecoSpeechAppendUnique(state.committed,state.interim);state.interim='';render();}
+      setButtons(false);
+      if(idecoLiveSpeechSession===state)idecoLiveSpeechSession=null;
+      status(msg||'Đã dừng nhận giọng nói.',''+cls);
+    };
+    const scheduleRestart=()=>{
+      if(!state.active||state.manualStop||state.finished)return;
+      try{clearTimeout(state.restartTimer)}catch(_e){}
+      state.restartTimer=setTimeout(()=>{ if(state.active&&!state.manualStop&&!state.finished) startCycle(); },180);
+    };
+    const startCycle=()=>{
+      if(!state.active||state.manualStop||state.finished)return;
+      let rec;
+      try{rec=new SR()}catch(e){finish('Không khởi tạo được nhận giọng nói: '+e.message,'err');return;}
+      state.recognition=rec;
+      rec.lang='vi-VN';rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;
+      rec.onstart=()=>{state.restartCount++;status('🎙 Đang nghe trực tiếp… Anh cứ nói tự nhiên, chữ sẽ hiện ngay.','busy');};
+      rec.onresult=e=>{
+        let interim='';
+        for(let i=e.resultIndex;i<e.results.length;i++){
+          const txt=idecoSpeechClean(e.results[i]?.[0]?.transcript||'');
+          if(!txt)continue;
+          if(e.results[i].isFinal){
+            state.committed=idecoSpeechAppendUnique(state.committed,txt);
+            state.interim='';
+          }else interim=idecoSpeechClean(interim+' '+txt);
+        }
+        state.interim=interim;
+        render();
+        status(interim?'🎙 Đang nghe… '+interim:'🎙 Đang nghe trực tiếp…','busy');
+      };
+      rec.onerror=e=>{
+        const code=String(e?.error||'unknown');state.lastError=code;
+        if(code==='no-speech'||code==='aborted')return;
+        if(code==='not-allowed'||code==='service-not-allowed'||code==='audio-capture'){
+          state.active=false;
+          finish(code==='audio-capture'?'Không tìm thấy micro hoặc micro đang bị ứng dụng khác sử dụng.':'Trình duyệt đang chặn quyền Micro. Hãy cho phép Micro cho website rồi tải lại trang.','err');
+          return;
+        }
+        // Lỗi network/service đôi lúc chỉ thoáng qua; onend sẽ tự nối lại session.
+        status('Nhận giọng nói vừa bị gián đoạn ('+code+'). Hệ thống đang tự nối lại…','busy');
+      };
+      rec.onend=()=>{
+        state.recognition=null;
+        if(state.interim){state.committed=idecoSpeechAppendUnique(state.committed,state.interim);state.interim='';render();}
+        if(state.manualStop||!state.active){finish(opts.doneMessage||'Đã nhận giọng nói thành văn bản.','ok');return;}
+        scheduleRestart();
+      };
+      try{rec.start()}catch(e){
+        status('Micro đang khởi động lại…','busy');
+        scheduleRestart();
+      }
+    };
+    state.stop=()=>{
+      if(state.finished)return;
+      state.manualStop=true;state.active=false;
+      status('Đang hoàn tất câu vừa nói…','busy');
+      try{state.recognition?.stop()}catch(_e){finish(opts.doneMessage||'Đã nhận giọng nói thành văn bản.','ok');}
+      if(!state.recognition)finish(opts.doneMessage||'Đã nhận giọng nói thành văn bản.','ok');
+    };
+    setButtons(true);render();startCycle();
+    return true;
+  }
+  function idecoStopLiveSpeech(owner){
+    const s=idecoLiveSpeechSession;
+    if(!s||s.owner!==owner)return false;
+    try{s.stop?.()}catch(_e){}
+    return true;
+  }
+
   function appendCompanySpeechText(finalText,interimText=''){
     const field=$('companyInfoContent'); if(!field)return;
     const parts=[];
@@ -1598,55 +1734,28 @@ ${txt}`;
   }
 
   function startCompanyBrowserSpeech(){
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    if(!SR) return false;
-    companySpeechBaseText=$('companyInfoContent').value.trim();
-    companySpeechFinalByIndex=new Map();
-    companySpeechManualStop=false;
-    companySpeechActive=true;
-    const recognition=new SR();
-    companySpeechRecognition=recognition;
-    recognition.lang='vi-VN';
-    recognition.continuous=true;
-    recognition.interimResults=true;
-    recognition.maxAlternatives=1;
-    recognition.onresult=e=>{
-      let interim='';
-      for(let i=e.resultIndex;i<e.results.length;i++){
-        const txt=(e.results[i][0]?.transcript||'').trim();
-        if(!txt)continue;
-        if(e.results[i].isFinal) companySpeechFinalByIndex.set(i,txt);
-        else interim+=(interim?' ':'')+txt;
-      }
-      appendCompanySpeechText(buildCompanyFinalSpeech(),interim);
-      setStatus($('companyInfoStatus'),`🎙 Đang nghe trực tiếp... ${interim?'Đang nhận: '+interim:'Anh cứ nói tự nhiên, văn bản sẽ cập nhật liên tục.'}`,'busy');
-    };
-    recognition.onerror=e=>{
-      const code=e?.error||'unknown';
-      if(code==='no-speech') return;
-      companySpeechActive=false;
-      $('companyMicBtn').disabled=false;$('companyMicStopBtn').disabled=true;
-      setStatus($('companyInfoStatus'),`Micro trực tiếp gặp lỗi (${code}). Anh có thể bấm lại; hệ thống sẽ dùng chế độ ghi âm dự phòng nếu trình duyệt không hỗ trợ.`,'err');
-    };
-    recognition.onend=()=>{
-      if(companySpeechActive&&!companySpeechManualStop){
-        try{recognition.start();return}catch(e){}
-      }
-      companySpeechActive=false;
-      $('companyMicBtn').disabled=false;$('companyMicStopBtn').disabled=true;
-      const finalText=buildCompanyFinalSpeech();
-      appendCompanySpeechText(finalText,'');
-      if(companySpeechManualStop) setStatus($('companyInfoStatus'),'Đã nhận giọng nói thành văn bản. Nên bấm “AI chuẩn hóa thông tin” trước khi lưu để sửa lỗi nghe sai/chính tả.','ok');
-    };
-    recognition.start();
-    $('companyMicBtn').disabled=true;$('companyMicStopBtn').disabled=false;
-    setStatus($('companyInfoStatus'),'🎙 Đang nghe trực tiếp... Anh nói tự nhiên, văn bản sẽ hiện ngay.','busy');
-    return true;
+    companyForceRecorder=false;
+    try{
+      return idecoStartLiveSpeech({
+        owner:'company-info',fieldId:'companyInfoContent',startBtnId:'companyMicBtn',stopBtnId:'companyMicStopBtn',
+        status:(msg,cls)=>setStatus($('companyInfoStatus'),msg,cls),
+        doneMessage:'Đã nhận giọng nói thành văn bản. Nên bấm “AI chuẩn hóa thông tin” trước khi lưu.'
+      });
+    }catch(e){setStatus($('companyInfoStatus'),e.message,'err');return true;}
   }
 
   async function startCompanyRecorderFallback(){
-    if(!navigator.mediaDevices?.getUserMedia||!window.isSecureContext) throw new Error('Micro cần chạy trên HTTPS và được trình duyệt cấp quyền.');
-    companyStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});companyChunks=[];
+    if(!navigator.mediaDevices?.getUserMedia||!window.isSecureContext) throw new Error('Micro cần chạy trên HTTPS/localhost và được trình duyệt cấp quyền.');
+    try{companyStream?.getTracks?.().forEach(t=>t.stop())}catch(e){}
+    try{
+      companyStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});
+    }catch(e){
+      const name=String(e?.name||'');
+      if(name==='NotAllowedError'||name==='SecurityError') throw new Error('Trình duyệt đang chặn quyền Micro. Bấm biểu tượng ổ khóa cạnh địa chỉ website → Micro → Cho phép, sau đó tải lại trang.');
+      if(name==='NotFoundError'||name==='DevicesNotFoundError') throw new Error('Không tìm thấy micro trên thiết bị. Hãy kiểm tra micro rồi thử lại.');
+      throw e;
+    }
+    companyChunks=[];
     const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported?.(t));companyRecorder=new MediaRecorder(companyStream,preferred?{mimeType:preferred}:undefined);
     companyRecorder.ondataavailable=e=>{if(e.data?.size)companyChunks.push(e.data)};
     companyRecorder.onerror=e=>{setStatus($('companyInfoStatus'),'Ghi âm gặp lỗi: '+(e?.error?.message||'không xác định'),'err')};
@@ -1669,22 +1778,23 @@ ${txt}`;
 
   if($('companyMicBtn')) $('companyMicBtn').onclick=async()=>{
     try{
-      if(companySpeechActive||companyRecorder?.state==='recording') return;
-      if(startCompanyBrowserSpeech()) return;
+      if(companyRecorder?.state==='recording'||idecoLiveSpeechSession?.owner==='company-info')return;
+      // Khi mở AI Voice trực tiếp: ưu tiên Web Speech để chữ hiện ngay.
+      // Khi chạy trong iframe hoặc Web Speech không có: dùng ghi âm + AI chép lời dự phòng.
+      if(!idecoSpeechIsEmbedded()&&!companyForceRecorder&&startCompanyBrowserSpeech())return;
+      setStatus($('companyInfoStatus'),'🎙 Đang mở micro ở chế độ ghi âm dự phòng…','busy');
       await startCompanyRecorderFallback();
-    }catch(e){setStatus($('companyInfoStatus'),e.message,'err')}
+    }catch(e){
+      const msg=String(e?.message||e||'Không mở được micro.');
+      setStatus($('companyInfoStatus'),msg,'err');
+    }
   };
 
   if($('companyMicStopBtn')) $('companyMicStopBtn').onclick=()=>{
     try{
-      if(companySpeechActive&&companySpeechRecognition){
-        companySpeechManualStop=true;companySpeechActive=false;
-        setStatus($('companyInfoStatus'),'Đang kết thúc nhận giọng nói...','busy');
-        companySpeechRecognition.stop();
-        return;
-      }
+      if(idecoStopLiveSpeech('company-info'))return;
       if(companyRecorder?.state==='recording'){
-        setStatus($('companyInfoStatus'),'Đang kết thúc ghi âm...','busy');
+        setStatus($('companyInfoStatus'),'Đang kết thúc ghi âm…','busy');
         companyRecorder.stop();
       }
     }catch(e){setStatus($('companyInfoStatus'),e.message,'err')}
@@ -1712,7 +1822,7 @@ ${txt}`;
 
   if($('companyNormalizeBtn')) $('companyNormalizeBtn').onclick=normalizeCompanyDraft;
   if($('clearCompanyDraftBtn')) $('clearCompanyDraftBtn').onclick=()=>{
-    try{if(companySpeechActive&&companySpeechRecognition){companySpeechManualStop=true;companySpeechActive=false;companySpeechRecognition.stop();}}catch(e){}
+    try{idecoStopLiveSpeech('company-info')}catch(e){}
     try{if(companyRecorder?.state==='recording')companyRecorder.stop();}catch(e){}
     $('companyInfoTitle').value='';$('companyInfoContent').value='';setStatus($('companyInfoStatus'),'Đã xóa nội dung đang nhập.','ok');
   };
@@ -1761,7 +1871,7 @@ Không tự thêm ý, không tóm tắt, không suy luận. Chỉ trả văn b�
     return out;
   }
 
-  async function startContextFieldMic(key){
+  async function startContextFieldRecorder(key){
     const cfg=CONTEXT_FIELD_CONFIG[key]; if(!cfg)return;
     try{
       if(contextFieldRecorder?.state==='recording') throw new Error('Một ô khác đang ghi âm. Hãy bấm Dừng trước.');
@@ -1793,9 +1903,25 @@ Không tự thêm ý, không tóm tắt, không suy luận. Chỉ trả văn b�
     }catch(e){setMiniStatus(cfg.statusId,e.message,'err')}
   }
 
+  async function startContextFieldMic(key){
+    const cfg=CONTEXT_FIELD_CONFIG[key];if(!cfg)return;
+    try{
+      if(!idecoSpeechIsEmbedded()){
+        const ok=idecoStartLiveSpeech({
+          owner:'context-'+key,fieldId:cfg.fieldId,startBtnId:cfg.micBtn,stopBtnId:cfg.stopBtn,
+          status:(msg,cls)=>setMiniStatus(cfg.statusId,msg,cls),
+          doneMessage:'Đã nhận giọng nói thành văn bản. Có thể bấm “Chuẩn hóa AI” để sửa chính tả/từ nghe sai.'
+        });
+        if(ok)return;
+      }
+      await startContextFieldRecorder(key);
+    }catch(e){setMiniStatus(cfg.statusId,e.message,'err')}
+  }
+
   function stopContextFieldMic(key){
     const cfg=CONTEXT_FIELD_CONFIG[key];
     try{
+      if(idecoStopLiveSpeech('context-'+key))return;
       if(contextFieldActive!==key || contextFieldRecorder?.state!=='recording') return;
       setMiniStatus(cfg.statusId,'Đang kết thúc ghi âm...','busy');
       contextFieldRecorder.stop();
@@ -1885,15 +2011,20 @@ ${raw}`;
 
   $('micBtn').onclick=async()=>{
     try{
-      if(!navigator.mediaDevices?.getUserMedia){
-        throw new Error('Trình duyệt chưa cho phép truy cập micro. Nếu đang mở file HTML trực tiếp, hãy dùng bản chạy qua HTTPS hoặc dùng nút “Chọn file ghi âm”.');
+      if(idecoLiveSpeechSession?.owner==='main-text'||mediaRecorder?.state==='recording')return;
+      // Trang trực tiếp: live speech cho cảm giác nói tới đâu ra chữ tới đó.
+      if(!idecoSpeechIsEmbedded()){
+        const ok=idecoStartLiveSpeech({
+          owner:'main-text',fieldId:'text',startBtnId:'micBtn',stopBtnId:'stopMicBtn',
+          status:(msg,cls)=>setStatus($('micStatus'),msg,cls),afterUpdate:updateCount,
+          doneMessage:'Đã nhận giọng nói thành văn bản.'
+        });
+        if(ok)return;
       }
-      if(!window.isSecureContext){
-        throw new Error('Micro trên mobile đang bị chặn vì trang chưa chạy trong môi trường HTTPS an toàn. Hãy mở ứng dụng qua HTTPS; hoặc ghi âm bằng điện thoại rồi dùng “Chọn file ghi âm”.');
-      }
-      mediaStream=await navigator.mediaDevices.getUserMedia({audio:{
-        echoCancellation:true,noiseSuppression:true,autoGainControl:true
-      }});
+      // Dự phòng khi iframe / trình duyệt không có Web Speech.
+      if(!navigator.mediaDevices?.getUserMedia)throw new Error('Trình duyệt chưa cho phép truy cập micro.');
+      if(!window.isSecureContext)throw new Error('Micro cần HTTPS/localhost.');
+      mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});
       audioChunks=[];
       const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported?.(t));
       mediaRecorder=new MediaRecorder(mediaStream,preferred?{mimeType:preferred}:undefined);
@@ -1905,15 +2036,17 @@ ${raw}`;
           $('micBtn').disabled=false;$('stopMicBtn').disabled=true;
           await transcribeAudioBlob(blob);
         }catch(e){setStatus($('micStatus'),e.message,'err')}
+        finally{mediaRecorder=null;mediaStream=null;audioChunks=[];}
       };
       mediaRecorder.start(500);
       $('micBtn').disabled=true;$('stopMicBtn').disabled=false;
-      setStatus($('micStatus'),'🎙️ Đang ghi âm... Bấm “Dừng & chép lời” khi nói xong.','busy');
-    }catch(e){setStatus($('micStatus'),e.message,'err')}
+      setStatus($('micStatus'),'🎙 Đang ghi âm dự phòng… Bấm Dừng khi nói xong.','busy');
+    }catch(e){setStatus($('micStatus'),String(e?.message||e),'err')}
   };
   $('stopMicBtn').onclick=()=>{
     try{
-      if(mediaRecorder?.state==='recording') mediaRecorder.stop();
+      if(idecoStopLiveSpeech('main-text'))return;
+      if(mediaRecorder?.state==='recording')mediaRecorder.stop();
     }catch(e){setStatus($('micStatus'),e.message,'err')}
   };
   $('uploadAudioBtn').onclick=()=>$('audioFileInput').click();
@@ -2426,5 +2559,74 @@ ${raw}`;
   },400);
 })();
 </script>
-</body>
+<script>(function(){
+  var ACTIVE_PAYLOAD=null;
+  var publishTimer=null;
+  function hostPost(msg){try{if(window.opener&&!window.opener.closed){window.opener.postMessage(msg,'*');return;}if(parent&&parent!==window){parent.postMessage(msg,'*');return;}window.postMessage(msg,'*');}catch(_e){}}
+  function el(id){return document.getElementById(id);}
+  function val(id){var e=el(id);return e?String(e.value||''):'';}
+  function setV(id,v){var e=el(id);if(!e)return;e.value=String(v==null?'':v);e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}
+  function clearAudio(){
+    ['sectionAudio_script','sectionAudio_commentary','sectionAudio_issues','sectionAudio_actions','sectionAudio_questions','sectionAudio_departments','reportPart1Audio','reportMergedAudio'].forEach(function(id){try{var a=el(id);if(a){a.pause();a.removeAttribute('src');a.load();}}catch(_e){}});
+  }
+  function clearAnalysis(){
+    ['reportScript','reportCommentary','reportIssues','reportActions','reportQuestions','reportDepartments'].forEach(function(id){setV(id,'');});
+    clearAudio();
+  }
+  function apply(p){
+    if(!p||typeof p!=='object')return;
+    ACTIVE_PAYLOAD=p;
+    try{localStorage.setItem('ideco_monthly_voice_agent_payload_v1',JSON.stringify(p));}catch(_e){}
+    // BƯỚC 1: chỉ nạp báo cáo gốc. Hai khung phía sau bắt buộc chờ người dùng thao tác.
+    var incoming=String(p.reportText||p.rawReportText||p.sourceReportText||p.originalReportText||p.report||p.content||'');
+    setV('reportRawText',incoming);
+    setV('reportNormalizedText','');
+    setV('reportText','');
+    setV('reportOwner',p.employeeName||'');
+    setV('reportDepartment',p.department||'');
+    setV('reportPeriod',p.periodLabel||p.month||'');
+    setV('reportKpi',p.kpiText||'');
+    setV('reportDirection',p.managementDirection||'');
+    setV('reportExtra',p.huyenCommentary||'');
+    clearAnalysis();
+    var ns=el('normalizeStatus');if(ns)ns.textContent='Bước 1/3 · Dữ liệu tháng đã được nạp vào “Báo cáo gốc cần chuẩn hóa”. Hãy bấm IDECO chuẩn hóa báo cáo.';
+    var rs=el('reportStatus');if(rs)rs.textContent='Chưa phân tích. Thực hiện đúng thứ tự: Chuẩn hóa → Thêm vào nội dung báo cáo → Huyền phân tích báo cáo.';
+    setTimeout(function(){var x=el('huyenReportStudio');if(x)x.scrollIntoView({behavior:'smooth',block:'start'});},180);
+    hostPost({type:'IDECO_REPORT_AGENT_LOADED',reportKey:p.reportKey||'',loadedChars:incoming.length});
+  }
+  window.IDECO_REPORT_AGENT_APPLY=apply;
+  function collect(){
+    var p=ACTIVE_PAYLOAD||{};
+    return {
+      reportKey:String(p.reportKey||''),reportName:String(p.reportName||''),employeeName:String(p.employeeName||''),department:String(p.department||''),month:String(p.month||''),periodLabel:String(p.periodLabel||''),
+      normalizedText:val('reportNormalizedText'),reportText:val('reportText'),
+      script:val('reportScript'),commentary:val('reportCommentary'),issues:val('reportIssues'),actions:val('reportActions'),questions:val('reportQuestions'),departments:val('reportDepartments'),
+      analysisCompleted:true,completedAt:new Date().toISOString()
+    };
+  }
+  function signature(r){return [r.script,r.commentary,r.issues,r.actions,r.questions,r.departments].join('\u241e');}
+  function hasAnalysis(r){return !![r.script,r.commentary,r.issues,r.actions,r.questions,r.departments].some(function(x){return String(x||'').trim();});}
+  function watchManualAnalysis(){
+    var btn=el('analyzeReportBtn');
+    if(!btn||btn.getAttribute('data-ideco-manual-bridge')==='1')return;
+    btn.setAttribute('data-ideco-manual-bridge','1');
+    btn.addEventListener('click',function(){
+      if(!ACTIVE_PAYLOAD||!ACTIVE_PAYLOAD.reportKey)return;
+      // Không cho xuất kết quả nếu người dùng chưa tự đưa nội dung xuống khung B.
+      if(!val('reportText').trim())return;
+      var before=signature(collect()),tries=0;
+      if(publishTimer)clearInterval(publishTimer);
+      publishTimer=setInterval(function(){
+        tries++;
+        var r=collect(),sig=signature(r);
+        if(hasAnalysis(r)&&sig!==before){
+          clearInterval(publishTimer);publishTimer=null;
+          hostPost({type:'IDECO_REPORT_AGENT_ANALYSIS_DONE',payload:r});
+        } else if(tries>480){clearInterval(publishTimer);publishTimer=null;}
+      },500);
+    },true);
+  }
+  window.addEventListener('message',function(ev){var d=ev.data||{};if(d.type==='IDECO_REPORT_AGENT_LOAD'){apply(d.payload||{});setTimeout(watchManualAnalysis,100);}});
+  window.addEventListener('load',function(){setTimeout(function(){watchManualAnalysis();if(window.opener&&!window.opener.closed){try{var saved=localStorage.getItem('ideco_monthly_voice_agent_payload_v1');if(saved)apply(JSON.parse(saved));}catch(_e){}}hostPost({type:'IDECO_REPORT_AGENT_READY'});},350);});
+})();<\/script></body>
 </html>
